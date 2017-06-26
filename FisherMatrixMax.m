@@ -2,7 +2,7 @@ clear;
 %%% Fisher Rough Draft %%%
 %Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
-iterationNum=17;
+iterationNum=16;
 
 %% Create Image and Labels
 ClusterImageGenerator3 %Generate Image
@@ -87,26 +87,32 @@ for iteration=1:iterationNum
     
     %% Plot stuff and label new point
     xax = [0:.01:256];
-    norm1 = normpdf(xax,muhat1MLE,sigmahat1MLE);
-    norm2 = normpdf(xax,muhat2MLE,sigmahat2MLE);
+    norm1 = normpdf(xax,mu1,sigma1);
+    norm2 = normpdf(xax,mu2,sigma2);
+    norm1est = normpdf(xax,muhat1MLE,sigmahat1MLE);
+    norm2est = normpdf(xax,muhat2MLE,sigmahat2MLE);
     figure()
-    plot(class1data',ones(length(class1data))*0.1,'bx')
+    plot(class1data',ones(length(class1data),1)*(max(norm1est)/2),'bx')
     hold on
     title(['Iteration # ' num2str(iteration)])
     xlabel('pixel value')
-    plot(class2data',ones(length(class2data))*0.1,'rx')
-    plot(xax,norm1,'--b')
-    plot(xax,norm2,'--r')
+    plot(class2data',ones(length(class2data),1)*(max(norm2est)/2),'rx')
+    plot(xax,norm1est,'--b') %Estimated Distribution
+    plot(xax,norm2est,'--r')
+    plot(xax,norm1,'b') %Actual Distrubution
+    plot(xax,norm2,'r')
+    legend('Class 1 Data','Class 2 Data','Class 1 Estimated','Class 2 Estimated','Class 1 Actual','Class 2 Actual')
+    
 
     guessedlabels(new_index)=actuallabels(new_index);
     if actuallabels(new_index)==1
         class1data(k)=image(new_index);
-        plot(image(new_index),0.1,'bo','MarkerSize',10)
+        plot(image(new_index),(max(norm1est)/2),'bo','MarkerSize',10)
         k=k+1;
     end
     if actuallabels(new_index)==2
         class2data(kk)=image(new_index);
-        plot(image(new_index),0.1,'ro','MarkerSize',10)
+        plot(image(new_index),(max(norm2est)/2),'ro','MarkerSize',10)
         kk=kk+1;
     end
     
