@@ -16,7 +16,7 @@ image1=imagelabels;
 mu1=imagedim/5;%(imagedim).*rand;
 mu2=(imagedim/5)*4;%(imagedim).*rand;
 sigma1=20;
-sigma2=sigma1;
+sigma2=10;
 
 for i1=1:imagedim
     for i2=1:imagedim
