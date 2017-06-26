@@ -2,7 +2,7 @@ clear;
 %%% Fisher Rough Draft %%%
 %Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
-iterationNum=16;
+iterationNum=17;
 
 %% Create Image and Labels
 ClusterImageGenerator3 %Generate Image
