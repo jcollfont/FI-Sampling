@@ -2,7 +2,7 @@ clear;
 %%% Fisher Rough Draft %%%
 %Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
-IterationNum=20;
+iterationNum=100;
 c_total=4;
 PoolNum=20; %Number of samples in initial labeled pool
 
@@ -31,6 +31,7 @@ for c=1:c_total %create class lists
 end
 
 %% Iterative Loop
+figID = figure;
 for iteration=1:IterationNum
     %% MLE Parameter Estimates
     % [muhat1,sigmahat1] = normfit(class1data);
@@ -77,32 +78,36 @@ for iteration=1:IterationNum
     [max_value,new_index]=max(trA);
     
     %% Plot stuff and label new point
-    xax = [0:.01:256];
-    for c=1:c_total
+    xax = linspace(0,256,1000);
+	  for c=1:c_total
         norm{c}=normpdf(xax,mu{c},sigma{c});
         normest{c}=normpdf(xax,muhat{c},sigmahat{c});
     end
-    
-    %%%%%%%%%%%%%%%%
-    figure()
+	
+    figure(figID);
     hold on
     for c=1:c_total
         plot(class{c}',ones(length(class{c}),1)*(max(norm{c})/2),'bx')
         plot(xax,normest{c},'--b') %Estimated Distribution
-        plot(xax,norm{c},'k') %Actual Distrubution
+        plot(xax,norm{c},'-k') %Actual Distrubution
     end
     title(['Iteration # ' num2str(iteration)])
     xlabel('pixel value')
 %    legend('Class 1 Data','Class 2 Data','Class 1 Estimated','Class 2 Estimated','Class 1 Actual','Class 2 Actual')
 
-    NewLabels(new_index)=Knownlabels(new_index);
+    NewLabels(new_index)=Knownlabels(UnlabeledIndices(new_index));
     for c=1:c_total
-        if Knownlabels(new_index)==c
-            class{c}(end+1)=image(new_index);
-            plot(image(new_index),(max(norm{c})/2),'or','MarkerSize',10)
+        if Knownlabels(UnlabeledIndices(new_index))==c
+            class{c}(end+1)=image(UnlabeledIndices(new_index));
+            plot(image(UnlabeledIndices(new_index)),(max(norm{c})/2),'or','MarkerSize',5,'LindeWidth',2)
         end
     end
-    hold off
+    
+    yyaxis left;
+    plot(image(UnlabeledIndices(:)),trA,'bx');
+    
+    hold off;
+    pause(0.5);
     
 end
 
