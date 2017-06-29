@@ -2,7 +2,7 @@ clear;
 %%% Fisher Rough Draft %%%
 %Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
-iterationNum=16;
+iterationNum=100;
 
 %% Create Image and Labels
 ClusterImageGenerator3 %Generate Image
@@ -35,6 +35,9 @@ for i=1:PoolNum
     end
 end
 
+
+%%
+figID = figure;
 for iteration=1:iterationNum
     %% MLE Parameter Estimates
     % [muhat1,sigmahat1] = normfit(class1data);
@@ -86,12 +89,14 @@ for iteration=1:iterationNum
     [max_value,new_index]=max(trA);
     
     %% Plot stuff and label new point
-    xax = [0:.01:256];
+    xax = linspace(0,256,1000);
     norm1 = normpdf(xax,mu1,sigma1);
     norm2 = normpdf(xax,mu2,sigma2);
     norm1est = normpdf(xax,muhat1MLE,sigmahat1MLE);
     norm2est = normpdf(xax,muhat2MLE,sigmahat2MLE);
-    figure()
+	
+	
+    figure(figID);
     plot(class1data',ones(length(class1data),1)*(max(norm1est)/2),'bx')
     hold on
     title(['Iteration # ' num2str(iteration)])
@@ -99,24 +104,27 @@ for iteration=1:iterationNum
     plot(class2data',ones(length(class2data),1)*(max(norm2est)/2),'rx')
     plot(xax,norm1est,'--b') %Estimated Distribution
     plot(xax,norm2est,'--r')
-    plot(xax,norm1,'b') %Actual Distrubution
-    plot(xax,norm2,'r')
+    plot(xax,norm1,'-b') %Actual Distrubution
+    plot(xax,norm2,'-r')
     legend('Class 1 Data','Class 2 Data','Class 1 Estimated','Class 2 Estimated','Class 1 Actual','Class 2 Actual')
-    
-
-    guessedlabels(new_index)=actuallabels(new_index);
-    if actuallabels(new_index)==1
-        class1data(k)=image(new_index);
-        plot(image(new_index),(max(norm1est)/2),'bo','MarkerSize',10)
+	
+    guessedlabels(new_index)=actuallabels(UnlabeledIndices(new_index));
+    if actuallabels(UnlabeledIndices(new_index))==1
+        class1data(k)=image(UnlabeledIndices(new_index));
+        plot(image(UnlabeledIndices(new_index)),(max(norm1est)/2),'bo','MarkerSize',5, 'LineWidth',2)
         k=k+1;
     end
-    if actuallabels(new_index)==2
-        class2data(kk)=image(new_index);
-        plot(image(new_index),(max(norm2est)/2),'ro','MarkerSize',10)
+    if actuallabels(UnlabeledIndices(new_index))==2
+        class2data(kk)=image(UnlabeledIndices(new_index));
+        plot(image(UnlabeledIndices(new_index)),(max(norm2est)/2),'ro','MarkerSize',5, 'LineWidth',2)
         kk=kk+1;
-    end
+	end
+	
+	yyaxis left;
+	plot(image(UnlabeledIndices(:)),trA,'kx');
     
-    hold off
+    hold off;
+	pause(0.5);
     
 end
 
