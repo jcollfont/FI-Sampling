@@ -2,7 +2,7 @@ clear;
 %%% Fisher Rough Draft %%%
 %Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
-iterationNum=100;
+IterationNum=20;
 c_total=4;
 PoolNum=20; %Number of samples in initial labeled pool
 
@@ -31,7 +31,7 @@ for c=1:c_total %create class lists
 end
 
 %% Iterative Loop
-figID = figure;
+%figID = figure;
 for iteration=1:IterationNum
     %% MLE Parameter Estimates
     % [muhat1,sigmahat1] = normfit(class1data);
@@ -84,7 +84,7 @@ for iteration=1:IterationNum
         normest{c}=normpdf(xax,muhat{c},sigmahat{c});
     end
 	
-    figure(figID);
+    figure() %figID
     hold on
     for c=1:c_total
         plot(class{c}',ones(length(class{c}),1)*(max(norm{c})/2),'bx')
@@ -99,7 +99,7 @@ for iteration=1:IterationNum
     for c=1:c_total
         if Knownlabels(UnlabeledIndices(new_index))==c
             class{c}(end+1)=image(UnlabeledIndices(new_index));
-            plot(image(UnlabeledIndices(new_index)),(max(norm{c})/2),'or','MarkerSize',5,'LindeWidth',2)
+            plot(image(UnlabeledIndices(new_index)),(max(norm{c})/2),'or','MarkerSize',5,'LineWidth',2)
         end
     end
     
