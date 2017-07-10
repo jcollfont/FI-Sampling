@@ -13,17 +13,17 @@ for i1=1:imagedim
 end
 
 image1=imagelabels;
-mu1=imagedim/5;%(imagedim).*rand;
-mu2=(imagedim/5)*4;%(imagedim).*rand;
-sigma1=3;
-sigma2=sigma1;
+mu{1}=100;%(imagedim).*rand;
+mu{2}=150;%(imagedim).*rand;
+sigma{1}=20;
+sigma{2}=20;
 
 for i1=1:imagedim
     for i2=1:imagedim
         if image1(i1,i2)==1
-            image1(i1,i2)=normrnd(mu1,sigma1);
+            image1(i1,i2)=normrnd(mu{1},sigma{1});
         elseif image1(i1,i2)==2
-            image1(i1,i2)=normrnd(mu2,sigma2);
+            image1(i1,i2)=normrnd(mu{2},sigma{2});
         end
         if image1(i1,i2)<1
             image1(i1,i2)=1;
