@@ -2,9 +2,9 @@ clear;
 %%% Fisher Rough Draft %%%
 %Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
-IterationNum=20;
+IterationNum=10;
 c_total=4;
-PoolNum=20; %Number of samples in initial labeled pool
+PoolNum=50; %Number of samples in initial labeled pool
 
 %% Create Image and Labels
 ClusterImageGenerator3 %Generate Image
@@ -49,18 +49,37 @@ for iteration=1:IterationNum
         end
     end
     
+    %% Fit logistic Regression to Current Pool
+    L=zeros(1,c_total);
+    for c=1:c_total
+        L(c)=length(class{c});
+    end
+    for c=1:c_total
+        l{c}=ones(L(c),1)*c;
+    end
+    labels=l{1};
+    data=class{1};
+    for c=2:c_total
+        labels=vertcat(labels,l{c});
+        data=vertcat(data,class{c});
+    end
+    
+%     sp=categorical(labels);
+%     B=mnrfit(data,sp);
+
+    [Fit, llh] = multinomial_logistic_regression(data', labels');
     %% Calculate the FI matrix
     UnlabeledIndices=find(NewLabels==0); %collect unlabeled indices
     UnlabeledLength=length(UnlabeledIndices);
     A=zeros(2,2,UnlabeledLength); %Create zeros for FI matrix
-    Prior=1/c_total; %Assume priors set equal for all classes for now (true for first test image)
+    x=zeros(1,UnlabeledLength);
     for i=1:UnlabeledLength %walk through unlabeled points
         x=image(UnlabeledIndices(i)); %at unlabeled point x
         for c=1:c_total
-            G(c)=normpdf(x,muhat{c},sigmahat{c});
-        end
-        for c=1:c_total
-            P=Prior*G(c)/sum(G);
+%             P=mnrval(B,x);
+%             p=P(c);
+            [y, p] = multinomial_logistic_prediction(Fit, x);
+            P=p(c);
             dLmu=(x-muhat{c})/(sigmahat{c}^2); %derivative of log likelihood mean
             dLsigma=((x-muhat{c})^2)/(2*(sigmahat{c}^2)^2); %derivative of log likelihood sigma
             dL=vertcat(dLmu,dLsigma); %creat derivative of log likelihood matrix
