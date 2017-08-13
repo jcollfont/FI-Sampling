@@ -20,21 +20,21 @@ index = (1:fc)'; %index list
 dg = sub2ind([fc,fc],index,index);
 T = sparse(labels,1:dataNum,1,classNum,dataNum,dataNum);
 w = zeros(featureNum,classNum);
-hT = zeros(featureNum,classNum,featureNum,classNum);
+Ht = zeros(featureNum,classNum,featureNum,classNum);
 for iteration = 2:Max_Iterations
     A = w'*data; %activations
-    logY = bsxfun(@minus,A,log_sum_exp(A,1)); %4.104
+    logY = bsxfun(@minus,A,logsumexp(A,1)); %4.104
     logLikelihood(iteration) = dot(T(:),logY(:))-0.5*lambda*dot(w(:),w(:)); %4.108
     if abs(logLikelihood(iteration)-logLikelihood(iteration-1)) < Tolerance; break; end
     Y = exp(logY);
     for i = 1:classNum
          for j = 1:classNum
             r = Y(i,:).*((i==j)-Y(j,:));
-            hT(:,i,:,j) = bsxfun(@times,data,r)*data'; %4.110
+            Ht(:,i,:,j) = bsxfun(@times,data,r)*data'; %4.110
         end
     end
     G = data*(Y-T)'+lambda*w; %Gradient calculated via 4.96
-    H = reshape(hT,fc,fc);
+    H = reshape(Ht,fc,fc);
     H(dg) = H(dg)+lambda;
     w(:) = w(:)-H\G(:); %parameter vector updated via 4.92
 end

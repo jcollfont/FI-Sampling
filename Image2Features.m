@@ -1,0 +1,161 @@
+function [features] = Image2Features(image)
+    L=sqrt(length(image));
+    features=zeros(length(image),8);
+    for i=1:length(image)
+        if i<=L %on left border
+            if i==1 %top left corner
+                %i1=image((i-L-1));
+                %i2=image((i-1));
+                %i3=image((i+L-1));
+                %i4=image((i-L));
+                i5=image(i);
+                i6=image((i+L));
+                %i7=image((i-L+1));
+                i8=image(i+1);
+                i9=image((i+L+1));
+                a=i5+i6+i8+i9;
+                a=a/4;
+                i1=a;
+                i2=a;
+                i3=a;
+                i4=a;
+                i7=a;
+            elseif i==L %bottom left corner
+                %i1=image((i-L-1));
+                i2=image((i-1));
+                i3=image((i+L-1));
+                %i4=image((i-L));
+                i5=image(i);
+                i6=image((i+L));
+                %i7=image((i-L+1));
+                %i8=image(i+1);
+                %i9=image((i+L+1));
+                a=i2+i3+i5+i6;
+                a=a/4;
+                i1=a;
+                i4=a;
+                i7=a;
+                i8=a;
+                i9=a;
+            else %not corner
+                %i1=image((i-L-1));
+                i2=image((i-1));
+                i3=image((i+L-1));
+                %i4=image((i-L));
+                i5=image(i);
+                i6=image((i+L));
+                %i7=image((i-L+1));
+                i8=image(i+1);
+                i9=image((i+L+1));
+                a=i2+i3+i5+i6+i8+i9;
+                a=a/6;
+                i1=a;
+                i4=a;
+                i7=a;
+            end
+        elseif mod(i,L)==0 && i~=L %if index is a multiple of L (on bottom border)
+            if i==(L^2) %bottom right corner
+                i1=image((i-L-1));
+                i2=image((i-1));
+                %i3=image((i+L-1));
+                i4=image((i-L));
+                i5=image(i);
+                %i6=image((i+L));
+                %i7=image((i-L+1));
+                %i8=image(i+1);
+                %i9=image((i+L+1));
+                a=i1+i2+i4+i5;
+                a=a/4;
+                i3=a;
+                i6=a;
+                i7=a;
+                i8=a;
+                i9=a;
+            else %bottom side, not corner
+                i1=image((i-L-1));
+                i2=image((i-1));
+                i3=image((i+L-1));
+                i4=image((i-L));
+                i5=image(i);
+                i6=image((i+L));
+                %i7=image((i-L+1));
+                %i8=image(i+1);
+                %i9=image((i+L+1));
+                a=i1+i2+i3+i4+i5+i6;
+                a=a/6;
+                i7=a;
+                i8=a;
+                i9=a;
+            end
+        elseif (mod(i,L)-1)==0 && i~=1 %on top border
+            if i==((L^2)-(L-1)) %top right corner
+                %i1=image((i-L-1));
+                %i2=image((i-1));
+                %i3=image((i+L-1));
+                i4=image((i-L));
+                i5=image(i);
+                %i6=image((i+L));
+                i7=image((i-L+1));
+                i8=image(i+1);
+                %i9=image((i+L+1));
+                a=i4+i5+i7+i8;
+                a=a/4;
+                i1=a;
+                i2=a;
+                i3=a;
+                i6=a;
+                i9=a;
+            else
+                %i1=image((i-L-1));
+                %i2=image((i-1));
+                %i3=image((i+L-1));
+                i4=image((i-L));
+                i5=image(i);
+                i6=image((i+L));
+                i7=image((i-L+1));
+                i8=image(i+1);
+                i9=image((i+L+1));
+                a=i4+i5+i6+i7+i8+i9;
+                a=a/6;
+                i1=a;
+                i2=a;
+                i3=a;
+            end
+        elseif i>((L^2)-L) && i~=((L^2)-(L-1)) && i~=(L^2) %on right border but not corner
+            i1=image((i-L-1));
+            i2=image((i-1));
+            %i3=image((i+L-1));
+            i4=image((i-L));
+            i5=image(i);
+            %i6=image((i+L));
+            i7=image((i-L+1));
+            i8=image(i+1);
+            %i9=image((i+L+1));
+            a=i1+i2+i4+i5+i7+i8;
+            a=a/6;
+            i3=a;
+            i6=a;
+            i9=a;
+        else %not on a border
+            i1=image((i-L-1));
+            i2=image((i-1));
+            i3=image((i+L-1));
+            i4=image((i-L));
+            i5=image(i);
+            i6=image((i+L));
+            i7=image((i-L+1));
+            i8=image(i+1);
+            i9=image((i+L+1));
+        end
+
+        features(i,ii,1)=i1;
+        features(i,ii,2)=i2;
+        features(i,ii,3)=i3;
+        features(i,ii,4)=i4;
+        features(i,ii,5)=i5;
+        features(i,ii,6)=i6;
+        features(i,ii,7)=i7;
+        features(i,ii,8)=i8;
+        features(i,ii,9)=i9;
+    end
+end
