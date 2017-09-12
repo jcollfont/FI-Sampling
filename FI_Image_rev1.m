@@ -1,12 +1,21 @@
 clear;
 %%% Fisher Rough Draft %%%
+
+%what does the filter look like? *Todo
+%catch up with semi-supervised learning (include in the current iteration
+%of code) *Todo
+%%% gives you a prior for the weight vectors. You can look at if this makes
+%%% sense. Does it bias your weight vectors in a logical direction?
+
+
 %Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
 IterationNum=300;
 c_total=2;
-PoolNum=10; %Number of samples in initial labeled pool
+PoolNum=16; %Number of samples in initial labeled pool
 
 im=rgb2gray(imread('1flower.jpeg')); %converts truecolor to intensity
+%im=imnoise(im,'gaussian',0,0.005);
 im1=double(im) + 1; %convert to numbers between 1 and 256 (double)
 
 [feature_map] = Image2FeatureMap(im1); % Create Feature Map
