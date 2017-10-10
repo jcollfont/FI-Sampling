@@ -11,7 +11,7 @@ clear;
 %% Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
 IterationNum=300;
-c_total=2;
+c_total=3;
 PoolNum=16; %Number of samples in initial labeled pool
 
 im=rgb2gray(imread('1flower.jpeg')); %converts truecolor to intensity
@@ -20,17 +20,15 @@ im=rgb2gray(imread('1flower.jpeg')); %converts truecolor to intensity
 if size(im,1)>size(im,2)
     ldiff=size(im,1)-size(im,2);
     %im=im(ldiff:end-1,:);
-    im=im(ldiff:end-100,1:end-99);
+    im=im(ldiff:end-200,1:end-199);
 elseif size(im,1)<size(im,2)
     ldiff=size(im,2)-size(im,1);
     %im=im(:,ldiff:end-1);
-    im=im(1:end-99,ldiff:end-100);
+    im=im(1:end-199,ldiff:end-200);
 else
     %do Nothing -- dimensions are squared
 end
 
-im=imresize(im,0.5);
-%imshow(im)
 %im=imnoise(im,'gaussian',0,0.005);
 im1=double(im) + 1; %convert to numbers between 1 and 256 (double)
 
@@ -76,10 +74,7 @@ toc
 del=diag(sum(AdjacMat,1))-AdjacMat;
 toc
 
-save('10_9_17_Del.mat','del','-v7.3');
-toc
-
-
+save('10_5_17_Del.mat','del','-v7.3');
 
 %% Initial Labeled Pool
 [PoolIndex]=datasample(1:(length(flatImage)),PoolNum); %randomly samples w/o replacement
@@ -119,82 +114,84 @@ for c=1:c_total %create class lists
     end
 end
 
-save('10_9_17_Trained.mat')
+save('10_5_17_Trained.mat')
 
-% clear;
-% load('10_9_17_Trained.mat')
-% load('10_9_17_Del.mat')
-% 
-% flatFeature_map = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
-% precision=flatFeature_map'*del*flatFeature_map;
-% lambda=1;
-% lambdaI=1;
-% LAMBDA=lambdaI*eye(size(flatFeature_map,2));
-% 
-% %% Iterative Loop
-% %for iteration=1:IterationNum 
-%     %% Fit logistic Regression to Current Pool
-%     [labels,data]=class_breakdown(class,c_total);
-%     [Fit, llh] = multinomial_logistic_regression_PRIOR(data', labels', precision, lambda, LAMBDA);
-%     %% Calculate the FI matrix
-%     UnlabeledIndices=find(NewLabels==0); %collect unlabeled indices
-%     EstimatedUnlabeleds=zeros(length(UnlabeledIndices),1);
-%     A=zeros(size(feature_map,3)+1,size(feature_map,3)+1,length(UnlabeledIndices)); %Create zeros for FI matrix
-%     x=zeros(1,length(UnlabeledIndices));
-%     for i=1:length(UnlabeledIndices) %walk through unlabeled points
-%         x=feature_map(coordinates(UnlabeledIndices(i),1),coordinates(UnlabeledIndices(i),2),:); %at unlabeled point x
-%         x=squeeze(x);
-%         [y, p] = multinomial_logistic_prediction(Fit, x);
-%         EstimatedUnlabeleds(i)=y;
-%         for c=1:c_total
-%             P=p(c);
-%             g=(1-P)*x';
-%             dLop=g*g'; %outer product
-%             S(:,:,c)=P*dLop;
-%         end
-%         A(:,:,i)=sum(S,3); %FI at x is outer product times posterior estimate summed over classes
-%     end
-% 
-%     %Plot Estimated Unlabeleds
-%     Estimates=zeros(length(NewLabels),1);
-%     for i=1:length(EstimatedUnlabeleds)
-%         Estimates(UnlabeledIndices(i))=EstimatedUnlabeleds(i);
-%     end
-%     v=find(NewLabels~=0);
-%     for i=1:length(v)
-%         Estimates(v(i))=NewLabels(v(i));
-%     end
-%     
-%     %plot heatmap
-%     Estimate_Matrix=zeros(size(im,1),size(im,2));
-%     for i=1:length(coordinates)
-%         Estimate_Matrix(coordinates(i,1),coordinates(i,2))=Estimates(i);
-%     end
-%     figure()
-%     colormap('gray')
-%     imagesc(Estimate_Matrix)
-%     colorbar
-%     
-%     %% Find maximum entry in A
-%     trA=zeros(length(UnlabeledIndices),1); %Create zeros for trace of FI matrix
-%     for i=1:length(UnlabeledIndices)
-%         trA(i)=trace(A(:,:,i));
-%     end
-%     [max_value,new_index]=max(trA);
-% 
-%     trA_new=zeros(length(NewLabels),1);
-%     for i=1:length(UnlabeledIndices)
-%         trA_new(UnlabeledIndices(i))=trA(i);
-%     end
-%     %plot heatmap
-%     A_heat=zeros(size(im,1),size(im,2));
-%     for i=1:length(coordinates)
-%         A_heat(coordinates(i,1),coordinates(i,2))=trA_new(i);
-%     end
-%     figure()
-%     colormap('hot')
-%     imagesc(A_heat)
-%     colorbar
+%load('10_3_17_test.mat');
+% load('10_3_17_Adjacency.mat');
+% load('10_3_17_Trained.mat');
+
+
+flatFeature_map=reshape(feature_map,(size(feature_map,1)^2),9);
+flatFeature_map = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
+precision=flatFeature_map'*del*flatFeature_map;
+lambdaK=1;
+lambdaI=1;
+LAMBDA=lambdaI*eye(size(flatFeature_map,2));
+
+%% Iterative Loop
+%for iteration=1:IterationNum 
+    %% Fit logistic Regression to Current Pool
+    [labels,data]=class_breakdown(class,c_total);
+    [Fit, llh] = multinomial_logistic_regression_PRIOR(data', labels', precision, lambdaK, LAMBDA);
+    %% Calculate the FI matrix
+    UnlabeledIndices=find(NewLabels==0); %collect unlabeled indices
+    EstimatedUnlabeleds=zeros(length(UnlabeledIndices),1);
+    A=zeros(size(feature_map,3)+1,size(feature_map,3)+1,length(UnlabeledIndices)); %Create zeros for FI matrix
+    x=zeros(1,length(UnlabeledIndices));
+    for i=1:length(UnlabeledIndices) %walk through unlabeled points
+        x=feature_map(coordinates(UnlabeledIndices(i),1),coordinates(UnlabeledIndices(i),2),:); %at unlabeled point x
+        x=squeeze(x);
+        [y, p] = multinomial_logistic_prediction(Fit, x);
+        EstimatedUnlabeleds(i)=y;
+        for c=1:c_total
+            P=p(c);
+            g=(1-P)*x';
+            dLop=g*g'; %outer product
+            S(:,:,c)=P*dLop;
+        end
+        A(:,:,i)=sum(S,3); %FI at x is outer product times posterior estimate summed over classes
+    end
+
+    %Plot Estimated Unlabeleds
+    Estimates=zeros(length(NewLabels),1);
+    for i=1:length(EstimatedUnlabeleds)
+        Estimates(UnlabeledIndices(i))=EstimatedUnlabeleds(i);
+    end
+    v=find(NewLabels~=0);
+    for i=1:length(v)
+        Estimates(v(i))=NewLabels(v(i));
+    end
+    
+    %plot heatmap
+    Estimate_Matrix=zeros(size(im,1),size(im,2));
+    for i=1:length(coordinates)
+        Estimate_Matrix(coordinates(i,1),coordinates(i,2))=Estimates(i);
+    end
+    figure()
+    colormap('gray')
+    imagesc(Estimate_Matrix)
+    colorbar
+    
+    %% Find maximum entry in A
+    trA=zeros(length(UnlabeledIndices),1); %Create zeros for trace of FI matrix
+    for i=1:length(UnlabeledIndices)
+        trA(i)=trace(A(:,:,i));
+    end
+    [max_value,new_index]=max(trA);
+
+    trA_new=zeros(length(NewLabels),1);
+    for i=1:length(UnlabeledIndices)
+        trA_new(UnlabeledIndices(i))=trA(i);
+    end
+    %plot heatmap
+    A_heat=zeros(size(im,1),size(im,2));
+    for i=1:length(coordinates)
+        A_heat(coordinates(i,1),coordinates(i,2))=trA_new(i);
+    end
+    figure()
+    colormap('hot')
+    imagesc(A_heat)
+    colorbar
 %    
 %     %% Plot stuff and label new point	
 %     prompt = {['Enter displayed points class (1 to ',num2str(c_total),'):']};
