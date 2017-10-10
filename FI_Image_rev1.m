@@ -1,5 +1,5 @@
+%% Fisher Rough Draft
 clear;
-%%% Fisher Rough Draft %%%
 
 %what does the filter look like? *Todo
 %catch up with semi-supervised learning (include in the current iteration
@@ -8,7 +8,7 @@ clear;
 %%% sense. Does it bias your weight vectors in a logical direction?
 
 
-%Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
+%% Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
 IterationNum=300;
 c_total=2;
@@ -16,22 +16,25 @@ PoolNum=16; %Number of samples in initial labeled pool
 
 im=rgb2gray(imread('1flower.jpeg')); %converts truecolor to intensity
 
-%Need to make image square so that Degree matrix is square
+%% Square off image
 if size(im,1)>size(im,2)
     ldiff=size(im,1)-size(im,2);
     %im=im(ldiff:end-1,:);
-    im=im(ldiff:end-200,1:end-199);
+    im=im(ldiff:end-100,1:end-99);
 elseif size(im,1)<size(im,2)
     ldiff=size(im,2)-size(im,1);
     %im=im(:,ldiff:end-1);
-    im=im(1:end-199,ldiff:end-200);
+    im=im(1:end-99,ldiff:end-100);
 else
     %do Nothing -- dimensions are squared
 end
 
+im=imresize(im,0.5);
+%imshow(im)
 %im=imnoise(im,'gaussian',0,0.005);
 im1=double(im) + 1; %convert to numbers between 1 and 256 (double)
 
+%% Create Feature Map(s)
 [feature_map] = Image2FeatureMap(im1); % Create Feature Map
 
 coordinates=zeros(size(im1,1)*size(im1,2),2);
@@ -51,63 +54,88 @@ for i=1:size(coordinates,1)
 end
 flatImage=reshape(im1,(size(im,1)*size(im,2)),1); %make image list (of pixel values)
 flatFeature_map=reshape(feature_map,(size(feature_map,1)^2),9);
+flatFeature_map2=mean(flatFeature_map,2);
+
+%% Calculate Graph Laplacian
+sigma=10;
+tic
+AdjacMat=zeros(size(flatFeature_map2,1),size(flatFeature_map2,1)); %Change to feature map!
+toc
+for i=1:size(flatImage,1)
+    for j=1:size(flatImage,1)
+        a=exp((-1/(2*sigma^2))*(norm(flatFeature_map2(i,:)-flatFeature_map2(j,:)))^2);
+        if a<0.001
+            AdjacMat(i,j)=0;
+        else
+            AdjacMat(i,j)=a;
+        end
+    end
+end
+toc
+
+del=diag(sum(AdjacMat,1))-AdjacMat;
+toc
+
+save('10_9_17_Del.mat','del','-v7.3');
+toc
 
 
-% %% Calculate Graph Laplacian
-% sigma=1;
-% AdjacMat=zeros(size(flatImage,1),size(flatImage,1)); %Change to feature map!
-% for i=1:size(flatImage,1)
-%     for j=1:size(flatImage,1)
-%         if
-%         AdjacMat(i,j)=exp((-1/(2*sigma^2))*norm(flatImage(i)-flatImage(j)));
-%     end
-% end
- 
-% %% Initial Labeled Pool
-% [PoolIndex]=datasample(1:(length(flatImage)),PoolNum); %randomly samples w/o replacement
-% PoolIndex=PoolIndex';
+
+%% Initial Labeled Pool
+[PoolIndex]=datasample(1:(length(flatImage)),PoolNum); %randomly samples w/o replacement
+PoolIndex=PoolIndex';
+
+im2=im2double(im);
+PoolClass=zeros(1,length(PoolIndex));
+
+prompt = {['Enter displayed points class (1 to ',num2str(c_total),'):']};
+dlg_title = 'Label Class';
+num_lines = 1;
+defaultans = {'0','hsv'};
+p=zeros(1,2);
+for i=1:length(PoolIndex)
+    handles.H=figure();
+    imshow(im2)
+    hold on
+    p=coordinates(PoolIndex(i),:);
+    plot(p(2),p(1),'go','LineWidth',3)
+    answer=inputdlg(prompt,dlg_title,num_lines,defaultans);
+    PoolClass(i)=str2num(answer{1});
+    close(handles.H)
+end
+
+NewLabels=zeros(length(flatImage),1); %empty estimated labels
+for i=1:PoolNum %Add labels to current list
+    NewLabels(PoolIndex(i))=PoolClass(i);
+end
+
+fdepth=size(feature_map,3);
+for c=1:c_total %create class lists
+    PI=PoolIndex(find(PoolClass==c));
+    for i=1:length(PI)
+        for ii=1:fdepth
+            class{c}(i,ii) = feature_map(coordinates(PI(i),1),coordinates(PI(i),2),ii);
+        end
+    end
+end
+
+save('10_9_17_Trained.mat')
+
+% clear;
+% load('10_9_17_Trained.mat')
+% load('10_9_17_Del.mat')
 % 
-% im2=im2double(im);
-% PoolClass=zeros(1,length(PoolIndex));
-% 
-% prompt = {['Enter displayed points class (1 to ',num2str(c_total),'):']};
-% dlg_title = 'Label Class';
-% num_lines = 1;
-% defaultans = {'0','hsv'};
-% p=zeros(1,2);
-% for i=1:length(PoolIndex)
-%     handles.H=figure();
-%     imshow(im2)
-%     hold on
-%     p=coordinates(PoolIndex(i),:);
-%     plot(p(2),p(1),'go','LineWidth',3)
-%     answer=inputdlg(prompt,dlg_title,num_lines,defaultans);
-%     PoolClass(i)=str2num(answer{1});
-%     close(handles.H)
-% end
-% 
-% NewLabels=zeros(length(flatImage),1); %empty estimated labels
-% for i=1:PoolNum %Add labels to current list
-%     NewLabels(PoolIndex(i))=PoolClass(i);
-% end
-% 
-% fdepth=size(feature_map,3);
-% for c=1:c_total %create class lists
-%     PI=PoolIndex(find(PoolClass==c));
-%     for i=1:length(PI)
-%         for ii=1:fdepth
-%             class{c}(i,ii) = feature_map(coordinates(PI(i),1),coordinates(PI(i),2),ii);
-%         end
-%     end
-% end
-% 
-% save('1flowerTrained.mat')
+% flatFeature_map = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
+% precision=flatFeature_map'*del*flatFeature_map;
+% lambda=1;
+% lambdaI=1;
+% LAMBDA=lambdaI*eye(size(flatFeature_map,2));
 % 
 % %% Iterative Loop
-% for iteration=1:IterationNum 
+% %for iteration=1:IterationNum 
 %     %% Fit logistic Regression to Current Pool
 %     [labels,data]=class_breakdown(class,c_total);
-%     [Fit, llh] = multinomial_logistic_regression(data', labels);
+%     [Fit, llh] = multinomial_logistic_regression_PRIOR(data', labels', precision, lambda, LAMBDA);
 %     %% Calculate the FI matrix
 %     UnlabeledIndices=find(NewLabels==0); %collect unlabeled indices
 %     EstimatedUnlabeleds=zeros(length(UnlabeledIndices),1);
