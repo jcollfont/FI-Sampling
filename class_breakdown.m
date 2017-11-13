@@ -17,4 +17,5 @@ for c1=2:c_total
     labels=vertcat(labels,l{c1});
     data=vertcat(data,class{c1});
 end
+
 end
