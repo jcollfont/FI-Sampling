@@ -156,7 +156,7 @@ end
 del=diag(sum(AdjacMat,1))-AdjacMat;
 % toc
 
-save('bird_del_11_12_17.mat','del','-v7.3');
+save('bird_del_11_15_17.mat','del','-v7.3');
 %toc
 
 %load('bird_del_11_7_17.mat');
