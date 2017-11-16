@@ -137,29 +137,29 @@ flatFeature_map=reshape(feature_map,(size(feature_map,1)^2),9^2);
 flatFeature_mapMEAN=mean(flatFeature_map,2);
 
 %% Calculate Graph Laplacian
-sigma=10;
-AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
+% sigma=10;
+% AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
+% 
+% % tic
+% for i=1:size(flatImage,1)
+%     for j=1:size(flatImage,1)
+%         a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
+%         if a<0.0001
+%             AdjacMat(i,j)=0;
+%         else
+%             AdjacMat(i,j)=a;
+%         end
+%     end
+% end
+% % toc
+% 
+% del=diag(sum(AdjacMat,1))-AdjacMat;
+% % toc
+% 
+% save('bird_del_11_12_17.mat','del','-v7.3');
+% %toc
 
-% tic
-for i=1:size(flatImage,1)
-    for j=1:size(flatImage,1)
-        a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
-        if a<0.0001
-            AdjacMat(i,j)=0;
-        else
-            AdjacMat(i,j)=a;
-        end
-    end
-end
-% toc
-
-del=diag(sum(AdjacMat,1))-AdjacMat;
-% toc
-
-save('bird_del_11_12_17.mat','del','-v7.3');
-%toc
-
-%load('bird_del_11_7_17.mat');
+load('bird_del_11_15_17.mat');
 
 %% Loop through prior weightings
 
@@ -335,6 +335,7 @@ for lambda=lambdaspan
                 AccuracyVsIterationClass2(iteration)=accuracy2;
 
             end
+            Output(q).Lambda=lambda
             Output(q).lambdaEye=lambdaI;
             Output(q).PoolIt(PoolIteration).AccuracyTotal=AccuracyVsIterationTotal;
             Output(q).PoolIt(PoolIteration).Accuracy1=AccuracyVsIterationClass1;
