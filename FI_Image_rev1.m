@@ -7,9 +7,9 @@ IterationNum=10000;
 c_total=2;
 PoolNum=1000; %Number of samples in initial labeled pool
 
-im=rgb2gray(imread('BSDS300/images/train/135069.jpg')); %converts truecolor to intensity
+im=rgb2gray(imread('135069.jpg')); %converts truecolor to intensity
 
-seg = readSeg('BSDS300/human/color/1105/135069.seg');
+seg = readSeg('135069.seg');
 [rs,cs]=size(seg);
 for i=1:rs %eliminate single pixel segmentations from original image
     for ii=1:cs
