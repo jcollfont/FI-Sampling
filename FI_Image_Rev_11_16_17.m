@@ -325,8 +325,9 @@ for lambda=lambdaspan
                 c2sum=sum(flatClass==2);
 
                 accuracyList=flatEstimate==flatClass;
-
-                accTotal=(sum(accuracyList)/length(accuracyList));
+                
+                iteration
+                accTotal=(sum(accuracyList)/length(accuracyList))
                 accuracy1=(acc1/c1sum);
                 accuracy2=(acc2/c2sum);
 
