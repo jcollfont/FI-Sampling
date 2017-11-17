@@ -302,7 +302,7 @@ for lambda=lambdaspan
 
                 NewLabels(UnlabeledIndices(new_index))=flatClass(UnlabeledIndices(new_index));
                 class{flatClass(UnlabeledIndices(new_index))}=[class{flatClass(UnlabeledIndices(new_index))};flatFeature_map(new_index,:)];
-                pause(0.5);
+                %pause(0.5);
 
                 % Accuracy Measurement
                 flatEstimate=reshape(Estimate_Matrix,(size(Estimate_Matrix,1)*size(Estimate_Matrix,2)),1);
@@ -335,11 +335,12 @@ for lambda=lambdaspan
                 AccuracyVsIterationClass2(iteration)=accuracy2;
 
             end
-            Output(q).Lambda=lambda
+            Output(q).Lambda=lambda;
             Output(q).lambdaEye=lambdaI;
             Output(q).PoolIt(PoolIteration).AccuracyTotal=AccuracyVsIterationTotal;
             Output(q).PoolIt(PoolIteration).Accuracy1=AccuracyVsIterationClass1;
             Output(q).PoolIt(PoolIteration).Accuracy2=AccuracyVsIterationClass2;
+            save('Output_11_16_17.mat','Output','-v7.3');
         end
     end
     q=q+1;
