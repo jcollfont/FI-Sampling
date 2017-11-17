@@ -4,10 +4,10 @@ clear;
 %confidence), # of classes
 IterationNum=10000;
 c_total=2;
-PoolIterations=10;
+PoolIterations=6;
 PoolNum=1000; %Number of samples in initial labeled pool
 lambdaspan=10.^linspace(-8,0,9);
-lambdaIspan=10^-8;
+lambdaIspan=10^-6;
 
 im=rgb2gray(imread('135069.jpg')); %converts truecolor to intensity
 
