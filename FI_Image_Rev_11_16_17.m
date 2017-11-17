@@ -335,7 +335,7 @@ for lambda=lambdaspan
                 AccuracyVsIterationClass2(iteration)=accuracy2;
 
             end
-            Output(q).Lambda=lambda;
+            Output(q).Lambda=lambda
             Output(q).lambdaEye=lambdaI;
             Output(q).PoolIt(PoolIteration).AccuracyTotal=AccuracyVsIterationTotal;
             Output(q).PoolIt(PoolIteration).Accuracy1=AccuracyVsIterationClass1;
