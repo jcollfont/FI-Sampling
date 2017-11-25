@@ -26,23 +26,6 @@ for i=1:rs %eliminate single pixel segmentations from original image
 end
 
 %% Use only two classes of this image (birds vs background)
-% seg2class=zeros(rs,cs);
-% for i=1:rs
-%     for ii=1:cs
-%         if seg(i,ii)==1
-%             seg2class(i,ii)=1; %background is 1
-%         end
-%     end
-% end
-% for i=1:rs
-%     for ii=1:cs
-%         if seg2class(i,ii)==0
-%             seg2class(i,ii)=2; %birds are 2
-%         end
-%     end
-% end
-
-%% Use only two classes of this image (birds vs background)
 seg2class=zeros(rs,cs);
 for i=1:rs
     for ii=1:cs
@@ -60,34 +43,6 @@ for i=1:rs
         end
     end
 end
-
-%% Use three classes of this image (birds vs tail vs background)
-% seg2class=zeros(rs,cs);
-% for i=1:rs
-%     for ii=1:cs
-%         if seg(i,ii)==1
-%             seg2class(i,ii)=1; %background is 1
-%         end
-%     end
-% end
-% for i=1:rs
-%     for ii=1:cs
-%         if seg(i,ii)==3
-%             seg2class(i,ii)=3; %tail is 3
-%         end
-%     end
-% end
-% 
-% for i=1:rs
-%     for ii=1:cs
-%         if seg2class(i,ii)==0
-%             seg2class(i,ii)=2; %birds are 2
-%         end
-%     end
-% end
-
-% figure()
-% imshow(mat2gray(seg2class))
 
 %% Square off image (im, seg, seg2class)
 if size(im,1)>size(im,2)
@@ -141,35 +96,35 @@ end
 flatImage=reshape(imdouble,(size(im,1)*size(im,2)),1); %make image list (of pixel values)
 flatClass=reshape(seg2class,(size(seg2class,1)*size(seg2class,2)),1);
 flatFeature_map=reshape(feature_map,(size(feature_map,1)^2),9^2);
-flatFeature_mapMEAN=mean(flatFeature_map,2);
+%flatFeature_mapMEAN=mean(flatFeature_map,2);
 
 disp('Now loading Del...');
-tic
+%tic
 
 %% Calculate Graph Laplacian
-sigma=10;
-AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
+% sigma=10;
+% AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
+% 
+% % tic
+% for i=1:size(flatImage,1)
+%     for j=1:size(flatImage,1)
+%         a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
+%         if a<0.0001
+%             AdjacMat(i,j)=0;
+%         else
+%             AdjacMat(i,j)=a;
+%         end
+%     end
+% end
+% % toc
+% 
+% del=diag(sum(AdjacMat,1))-AdjacMat;
+% % toc
+% 
+% save('bird_del_11_24_17.mat','del','-v7.3');
+% %toc
 
-% tic
-for i=1:size(flatImage,1)
-    for j=1:size(flatImage,1)
-        a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
-        if a<0.0001
-            AdjacMat(i,j)=0;
-        else
-            AdjacMat(i,j)=a;
-        end
-    end
-end
-% toc
-
-del=diag(sum(AdjacMat,1))-AdjacMat;
-% toc
-
-save('bird_del_11_24_17.mat','del','-v7.3');
-%toc
-
-%load('bird_del_11_15_17.mat');
+load('bird_del_11_24_17.mat');
 %toc
 disp('Del Loaded');
 
@@ -200,6 +155,9 @@ for lambda=lambdaspan
                     %disp('sample failure, resampling initial pool')
                 end
             end
+            
+            Output(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
+            save('Output_11_24_17.mat','Output','-v7.3');
 
             flatFeature_map_ones = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
             precision=flatFeature_map_ones'*del*flatFeature_map_ones;
@@ -246,24 +204,16 @@ for lambda=lambdaspan
                 end
 
                 %Estimated Unlabeleds
-                Estimates=NewLabels;
+                Estimates=zeros(size(flatImage,1),1);
                 Estimates(UnlabeledIndices)=EstimatedUnlabeleds;
+                EstimatesAndLabels=NewLabels;
+                EstimatesAndLabels(UnlabeledIndices)=EstimatedUnlabeleds;
 
     %             %plot heatmap
                 Estimate_Matrix=zeros(size(im,1),size(im,2));
                 for i=1:length(coordinates)
-                    Estimate_Matrix(coordinates(i,1),coordinates(i,2))=Estimates(i);
-                end    
-
-    %                 if iteration == IterationNum
-    %     % % %             if mod(iteration,20)==0 %iteration==IterationNum
-    %     %                 figure()
-    %     %                 colormap('gray')
-    %     %                 imagesc(Estimate_Matrix)
-    %     %                 colorbar
-    %     %                 title(['Final Estimate for lambda =',num2str(lambda)])
-    %     % % %             end
-    %                 end
+                    Estimate_Matrix(coordinates(i,1),coordinates(i,2))=EstimatesAndLabels(i);
+                end
 
                 % Find maximum entry in A
                 trA=zeros(length(UnlabeledIndices),1); %Create zeros for trace of FI matrix
@@ -272,79 +222,22 @@ for lambda=lambdaspan
                 end
                 [max_value,new_index]=max(trA);
 
-    %%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %             trA_new=zeros(length(NewLabels),1);
-    %             for i=1:length(UnlabeledIndices)
-    %                 trA_new(UnlabeledIndices(i))=trA(i);
-    %             end
-    %             
-    %             
-    %             %plot heatmap
-    %             A_heat=zeros(size(im,1),size(im,2));
-    %             for i=1:length(coordinates)
-    %                 A_heat(coordinates(i,1),coordinates(i,2))=trA_new(i);
-    %             end
-    %             if mod(iteration,20)==0 %iteration==IterationNum
-    %                 figure()
-    %                 colormap('hot')
-    %                 imagesc(A_heat)
-    %                 colorbar
-    %             end
-    % 
-    %             %% Plot stuff and label new point	
-    %             prompt = {['Enter displayed points class (1 to ',num2str(c_total),'):']};
-    %             dlg_title = 'Label Class';
-    %             num_lines = 1;
-    %             defaultans = {'0','hsv'};
-    %             handles.H=figure();
-    %             imshow(im2)
-    %             hold on
-    %             p=coordinates(new_index,:);
-    %             plot(p(2),p(1),'go','LineWidth',3)
-    %             answer=inputdlg(prompt,dlg_title,num_lines,defaultans);
-    %             num=str2num(answer{1});
-
-    %             NewLabels(UnlabeledIndices(new_index))=num;
-    %             feature=zeros(1,fdepth);
-    %             for i=1:fdepth
-    %                 feature(i)=feature_map(coordinates(UnlabeledIndices(new_index),1),coordinates(UnlabeledIndices(new_index),2),i);
-    %             end
-    %             class{num}=[class{num};feature];
-    %             close(handles.H)
-    %             pause(0.1);
-
-    %%            
-
                 NewLabels(UnlabeledIndices(new_index))=flatClass(UnlabeledIndices(new_index));
                 class{flatClass(UnlabeledIndices(new_index))}=[class{flatClass(UnlabeledIndices(new_index))};flatFeature_map(new_index,:)];
                 %pause(0.5);
 
-                % Accuracy Measurement
-                flatEstimate=reshape(Estimate_Matrix,(size(Estimate_Matrix,1)*size(Estimate_Matrix,2)),1);
-
-                %separate accuracies for two classes
-                acc1=0;acc2=0;
-                for v = 1:length(flatEstimate)
-                    if flatClass(v) == 1
-                        if flatClass(v)==flatEstimate(v)
-                            acc1=acc1+1;
-                        end
-                    end
-                    if flatClass(v) == 2
-                        if flatClass(v)==flatEstimate(v)
-                            acc2=acc2+1;
-                        end
-                    end
-                end
-                c1sum=sum(flatClass==1);
-                c2sum=sum(flatClass==2);
-
-                accuracyList=flatEstimate==flatClass;
+                %Accuracy Measurements
+                %Separate accuracies for two classes
+                C1List=(Estimates==1);
+                C2List=(Estimates==2);
+                CList=(Estimates~=0);
+                C1ListAcc=flatClass(C1List)==C1List(C1List);
+                C2ListAcc=flatClass(C2List)==(C2List(C2List)*2);
+                CListAcc=flatClass(CList)==Estimates(CList);
                 
-                accTotal=(sum(accuracyList)/length(accuracyList));
-                accuracy1=(acc1/c1sum);
-                accuracy2=(acc2/c2sum);
+                accTotal=(sum(CListAcc)/length(CListAcc));
+                accuracy1=(sum(C1ListAcc)/length(C1ListAcc));
+                accuracy2=(sum(C2ListAcc)/length(C2ListAcc));
                 
                 disp(['Total Accuracy = ',num2str(accTotal),' for iteration ',num2str(iteration)]);
 
@@ -353,6 +246,7 @@ for lambda=lambdaspan
                 AccuracyVsIterationClass2(iteration)=accuracy2;
                 
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
+                Output(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=new_index;
                 save('Output_11_24_17.mat','Output','-v7.3');
             end
             Output(q).Lambda=lambda
