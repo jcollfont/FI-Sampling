@@ -1,5 +1,13 @@
 %% Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
+
+%todo
+%does the sigma in del matter
+%change the shape a bit so that it is taller (or wider)
+%
+
+
+
 IterationNum=1100;
 c_total=2;
 PoolIterations=1;
@@ -72,7 +80,7 @@ del=diag(sum(AdjacMat,1))-AdjacMat;
 % toc
 
 save('BWtest_del_11_27_17.mat','del','-v7.3');
-toc
+%toc
 
 load('BWtest_del_11_27_17.mat');
 %toc
