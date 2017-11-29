@@ -1,22 +1,19 @@
 %% Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
-
-%todo
-%does the sigma in del matter
-
-
-IterationNum=1100;
+clear;
+IterationNum=13;
 c_total=2;
 PoolIterations=1;
-PoolNum=1000; %Number of samples in initial labeled pool
-lambdaspan=1; %10.^linspace(-6,1,8);
-lambdaIspan=10^-6;
+PoolNum=3; %Number of samples in initial labeled pool
+lambdaspan=1; %10^-1; %3.7365e+12; %10.^linspace(-6,1,8);
+lambdaIspan=0;
+KernelSize=3;
 
-GenerateBWimage2
+[seg]=GenerateNEWLABELimage;
 
-im=(imread('BWtest2.jpg')); %converts truecolor to intensity
+im=(imread('NEWLABELtest.jpg')); %converts truecolor to intensity
 
-load('BWtestTruth2.mat');
+%load('BWtestTruth2.mat');
 seg2class=seg;
 
 %% Shrink Image further (assumed square)
@@ -25,12 +22,12 @@ seg2class=seg;
 %im=imresize(im,scalefactor);
 %seg2class=imresize(seg2class,scalefactor,'nearest');
 
-%imshow(im)
-im=imnoise(im,'gaussian',0,0.005);
+imagesc(im)
+%im=imnoise(im,'gaussian',0,0.005);
 imdouble=double(im) + 1; %convert to numbers between 1 and 256 (double)
 
 %% Create Feature Map(s)
-[feature_map] = Image2FeatureMap2(imdouble,9); % Create Feature Map
+[feature_map] = Image2FeatureMap2(imdouble,KernelSize); % Create Feature Map
 
 coordinates=zeros(size(imdouble,1)*size(imdouble,2),2); %Create list of coordinates
 c=1:size(imdouble,2);
@@ -50,36 +47,36 @@ end
 
 flatImage=reshape(imdouble,(size(im,1)*size(im,2)),1); %make image list (of pixel values)
 flatClass=reshape(seg2class,(size(seg2class,1)*size(seg2class,2)),1);
-flatFeature_map=reshape(feature_map,(size(feature_map,1)^2),9^2);
+flatFeature_map=reshape(feature_map,(size(feature_map,1)^2),KernelSize^2);
 %flatFeature_mapMEAN=mean(flatFeature_map,2);
 
 disp('Now loading Del...');
 %tic
 
 %% Calculate Graph Laplacian
-% sigma=10;
-% AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
-% 
-% % tic
-% for i=1:size(flatImage,1)
-%     for j=1:size(flatImage,1)
-%         a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
-%         if a<0.0001
-%             AdjacMat(i,j)=0;
-%         else
-%             AdjacMat(i,j)=a;
-%         end
-%     end
-% end
-% % toc
-% 
-% del=diag(sum(AdjacMat,1))-AdjacMat;
-% % toc
-% 
-% save('BWtest2_del_11_27_17.mat','del','-v7.3');
-% %toc
+sigma=10;
+AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
 
-load('BWtest2_del_11_27_17.mat');
+% tic
+for i=1:size(flatImage,1)
+    for j=1:size(flatImage,1)
+        a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
+        if a<0.0001
+            AdjacMat(i,j)=0;
+        else
+            AdjacMat(i,j)=a;
+        end
+    end
+end
+% toc
+
+del=diag(sum(AdjacMat,1))-AdjacMat;
+% toc
+
+save('NEWLABELtest_del_11_29_17.mat','del','-v7.3');
+%toc
+
+load('NEWLABELtest_del_11_29_17.mat');
 %toc
 disp('Del Loaded');
 
@@ -89,14 +86,15 @@ q=1;
 for lambda=lambdaspan
     disp(['For lambda = ',num2str(lambda),' ...']);
     for lambdaI=lambdaIspan
-        disp(['For lambdaI = ',num2str(lambdaI),' ...']);
+        %disp(['For lambdaI = ',num2str(lambdaI),' ...']);
         %% Initial Labeled Pool
         for PoolIteration=1:PoolIterations
-            disp(['For Pool Iteration = ',num2str(PoolIteration),' ...']);
+            %disp(['For Pool Iteration = ',num2str(PoolIteration),' ...']);
             
             a=1;
             while a==1
-                PoolIndex=randperm(length(flatImage),PoolNum); %randomly samples w/o replacement
+                %PoolIndex=randperm(length(flatImage),PoolNum); %randomly samples w/o replacement
+                PoolIndex = datasample(1:length(flatImage),PoolNum,'Replace',false);%,'Weights',PoolWeights);
                 PoolIndex=PoolIndex';
 
                 NewLabels=zeros(size(flatImage,1),1); %empty estimated labels
@@ -110,8 +108,8 @@ for lambda=lambdaspan
                 end
             end
             
-            BWOutput(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
-            save('BWOutput2_11_27_17.mat','BWOutput','-v7.3');
+%             BWOutput(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
+%             save('BWOutput_11_28_17.mat','BWOutput','-v7.3');
 
             flatFeature_map_ones = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
             precision=flatFeature_map_ones'*del*flatFeature_map_ones;
@@ -131,16 +129,16 @@ for lambda=lambdaspan
             for iteration=1:IterationNum 
                 %% Fit logistic Regression to Current Pool
                 [labels,data]=class_breakdown(class,c_total);
-                [Fit, llh] = multinomial_logistic_regression_PRIOR(data', labels', precision, lambda, LAMBDA);
-                %[Fit, llh] = multinomial_logistic_regression(data', labels');
+                %[Fit, llh] = multinomial_logistic_regression_PRIOR(data', labels', precision, lambda, LAMBDA);
+                [Fit, llh] = multinomial_logistic_regression(data', labels',lambda);
                 
                 % Calculate the FI matrix
                 UnlabeledIndices=find(NewLabels==0); %collect unlabeled indices
                 [A, EstimatedUnlabeleds]=CalculateFI_11_26_17(UnlabeledIndices, feature_map, flatFeature_map, Fit, c_total);
                 
                 if max(max(max(A)))==0
-                    disp('A HAS GONE TO ZERO');
-                    pause;
+                    %disp('A HAS GONE TO ZERO');
+                    %pause;
                 end
                 
                 %Estimated Unlabeleds
@@ -150,9 +148,10 @@ for lambda=lambdaspan
                 EstimatesAndLabels(UnlabeledIndices)=EstimatedUnlabeleds;
 
                %plot heatmap
-                Estimate_Matrix=zeros(size(im,1),size(im,2));
+                Estimate_Matrix=zeros(size(im,2),size(im,1));
+                %Estimate_Matrix=reshape(EstimatesAndLabels,size(im,2),size(im,1));
                 for i=1:length(coordinates)
-                    Estimate_Matrix(coordinates(i,1),coordinates(i,2))=EstimatesAndLabels(i);
+                    Estimate_Matrix(coordinates(i,2),coordinates(i,1))=EstimatesAndLabels(i);
                 end
 
                 % Find maximum entry in A
@@ -162,12 +161,12 @@ for lambda=lambdaspan
                 end
                 [max_value,new_index]=max(trA);
                 
-                %if mod(iteration,10)==0
+                %if mod(iteration,10)==0 | iteration ==1
                 HeatPlots_11_26_17(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im, coordinates,Fit);
                 %end
                 
                 NewLabels(UnlabeledIndices(new_index))=flatClass(UnlabeledIndices(new_index));
-                class{flatClass(UnlabeledIndices(new_index))}=[class{flatClass(UnlabeledIndices(new_index))};flatFeature_map(new_index,:)];
+                class{flatClass(UnlabeledIndices(new_index))}=[class{flatClass(UnlabeledIndices(new_index))};flatFeature_map(UnlabeledIndices(new_index),:)];
                 %pause(0.5);
 
                 %Accuracy Measurements
@@ -189,19 +188,19 @@ for lambda=lambdaspan
                 AccuracyVsIterationClass1(iteration)=accuracy1;
                 AccuracyVsIterationClass2(iteration)=accuracy2;
                 
-                BWOutput(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
-                BWOutput(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
-                save('BWOutput2_11_27_17.mat','BWOutput','-v7.3');
+%                 BWOutput(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
+%                 BWOutput(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
+%                 save('BWOutput_11_28_17.mat','BWOutput','-v7.3');
             end
-            BWOutput(q).Lambda=lambda
-            BWOutput(q).lambdaEye=lambdaI;
-            BWOutput(q).PoolIt(PoolIteration).AccuracyTotal=AccuracyVsIterationTotal;
-            BWOutput(q).PoolIt(PoolIteration).Accuracy1=AccuracyVsIterationClass1;
-            BWOutput(q).PoolIt(PoolIteration).Accuracy2=AccuracyVsIterationClass2;
+%             BWOutput(q).Lambda=lambda
+%             BWOutput(q).lambdaEye=lambdaI;
+%             BWOutput(q).PoolIt(PoolIteration).AccuracyTotal=AccuracyVsIterationTotal;
+%             BWOutput(q).PoolIt(PoolIteration).Accuracy1=AccuracyVsIterationClass1;
+%             BWOutput(q).PoolIt(PoolIteration).Accuracy2=AccuracyVsIterationClass2;
         end
     end
     q=q+1;
 end
 
-save('BWOutput2_11_27_17.mat','BWOutput','-v7.3');
+% save('BWOutput_11_28_17.mat','BWOutput','-v7.3');
 

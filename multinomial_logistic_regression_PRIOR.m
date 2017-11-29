@@ -5,7 +5,7 @@ function [Fit, logLikelihood] = multinomial_logistic_regression_PRIOR(data, labe
 %   Fit: trained Fit structure
 %   llh: loglikelihood
 if nargin < 6
-    Tolerance = 1e-6; %set tolerance if not specified
+    Tolerance = 1e-4; %set tolerance if not specified
 end
 if nargin < 5
     lambdaI=1e-8;

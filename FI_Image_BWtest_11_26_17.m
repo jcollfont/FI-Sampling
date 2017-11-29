@@ -1,22 +1,17 @@
 %% Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
-
-%todo
-%does the sigma in del matter
-
-
-IterationNum=1100;
+IterationNum=1000;
 c_total=2;
 PoolIterations=1;
-PoolNum=1000; %Number of samples in initial labeled pool
-lambdaspan=1; %10.^linspace(-6,1,8);
+PoolNum=30; %Number of samples in initial labeled pool
+lambdaspan=1; %10.^linspace(-8,0,9);
 lambdaIspan=10^-6;
 
-GenerateBWimage2
+GenerateBWimage1
 
-im=(imread('BWtest2.jpg')); %converts truecolor to intensity
+im=(imread('BWtest.jpg')); %converts truecolor to intensity
 
-load('BWtestTruth2.mat');
+load('BWtestTruth.mat');
 seg2class=seg;
 
 %% Shrink Image further (assumed square)
@@ -76,10 +71,10 @@ disp('Now loading Del...');
 % del=diag(sum(AdjacMat,1))-AdjacMat;
 % % toc
 % 
-% save('BWtest2_del_11_27_17.mat','del','-v7.3');
-% %toc
+% save('BWtest_del_11_26_17.mat','del','-v7.3');
+%toc
 
-load('BWtest2_del_11_27_17.mat');
+load('BWtest_del_11_26_17.mat');
 %toc
 disp('Del Loaded');
 
@@ -111,7 +106,7 @@ for lambda=lambdaspan
             end
             
             BWOutput(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
-            save('BWOutput2_11_27_17.mat','BWOutput','-v7.3');
+            save('BWOutput_11_26_17.mat','BWOutput','-v7.3');
 
             flatFeature_map_ones = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
             precision=flatFeature_map_ones'*del*flatFeature_map_ones;
@@ -162,10 +157,8 @@ for lambda=lambdaspan
                 end
                 [max_value,new_index]=max(trA);
                 
-                %if mod(iteration,10)==0
-                HeatPlots_11_26_17(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im, coordinates,Fit);
-                %end
-                
+                %HeatPlots_11_26_17(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im, coordinates);
+
                 NewLabels(UnlabeledIndices(new_index))=flatClass(UnlabeledIndices(new_index));
                 class{flatClass(UnlabeledIndices(new_index))}=[class{flatClass(UnlabeledIndices(new_index))};flatFeature_map(new_index,:)];
                 %pause(0.5);
@@ -191,7 +184,7 @@ for lambda=lambdaspan
                 
                 BWOutput(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
                 BWOutput(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
-                save('BWOutput2_11_27_17.mat','BWOutput','-v7.3');
+                save('BWOutput_11_26_17.mat','BWOutput','-v7.3');
             end
             BWOutput(q).Lambda=lambda
             BWOutput(q).lambdaEye=lambdaI;
@@ -203,5 +196,5 @@ for lambda=lambdaspan
     q=q+1;
 end
 
-save('BWOutput2_11_27_17.mat','BWOutput','-v7.3');
+save('BWOutput_11_26_17.mat','BWOutput','-v7.3');
 
