@@ -223,7 +223,7 @@ for lambda=lambdaspan
                 [max_value,new_index]=max(trA);
 
                 NewLabels(UnlabeledIndices(new_index))=flatClass(UnlabeledIndices(new_index));
-                class{flatClass(UnlabeledIndices(new_index))}=[class{flatClass(UnlabeledIndices(new_index))};flatFeature_map(new_index,:)];
+                class{flatClass(UnlabeledIndices(new_index))}=[class{flatClass(UnlabeledIndices(new_index))};flatFeature_map(UnlabeledIndices(new_index),:)];
                 %pause(0.5);
 
                 %Accuracy Measurements

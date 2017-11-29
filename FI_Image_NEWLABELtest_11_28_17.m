@@ -29,25 +29,25 @@ imdouble=double(im) + 1; %convert to numbers between 1 and 256 (double)
 %% Create Feature Map(s)
 [feature_map] = Image2FeatureMap2(imdouble,KernelSize); % Create Feature Map
 
-coordinates=zeros(size(imdouble,1)*size(imdouble,2),2); %Create list of coordinates
-c=1:size(imdouble,2);
-c=c';
-coordinates(:,2)=repmat(c,size(imdouble,1),1);
-r=1;c=1;
-for i=1:size(coordinates,1)
-    if c<size(imdouble,2)
-        coordinates(i,1)=r;
-        c=c+1;
-    else
-        coordinates(i,1)=r;
-        c=1;
-        r=r+1;
-    end
-end
+% coordinates=zeros(size(imdouble,1)*size(imdouble,2),2); %Create list of coordinates
+% c=1:size(imdouble,2);
+% c=c';
+% coordinates(:,2)=repmat(c,size(imdouble,1),1);
+% r=1;c=1;
+% for i=1:size(coordinates,1)
+%     if c<size(imdouble,2)
+%         coordinates(i,1)=r;
+%         c=c+1;
+%     else
+%         coordinates(i,1)=r;
+%         c=1;
+%         r=r+1;
+%     end
+% end
 
 flatImage=reshape(imdouble,(size(im,1)*size(im,2)),1); %make image list (of pixel values)
 flatClass=reshape(seg2class,(size(seg2class,1)*size(seg2class,2)),1);
-flatFeature_map=reshape(feature_map,(size(feature_map,1)^2),KernelSize^2);
+flatFeature_map=fliplr(reshape(feature_map,(size(feature_map,1)^2),KernelSize^2));
 %flatFeature_mapMEAN=mean(flatFeature_map,2);
 
 disp('Now loading Del...');
@@ -148,11 +148,11 @@ for lambda=lambdaspan
                 EstimatesAndLabels(UnlabeledIndices)=EstimatedUnlabeleds;
 
                %plot heatmap
-                Estimate_Matrix=zeros(size(im,2),size(im,1));
-                %Estimate_Matrix=reshape(EstimatesAndLabels,size(im,2),size(im,1));
-                for i=1:length(coordinates)
-                    Estimate_Matrix(coordinates(i,2),coordinates(i,1))=EstimatesAndLabels(i);
-                end
+                %Estimate_Matrix=zeros(size(im,2),size(im,1));
+                Estimate_Matrix=reshape(EstimatesAndLabels,size(im,2),size(im,1));
+%                 for i=1:length(coordinates)
+%                     Estimate_Matrix(coordinates(i,2),coordinates(i,1))=EstimatesAndLabels(i);
+%                 end
 
                 % Find maximum entry in A
                 trA=zeros(length(UnlabeledIndices),1); %Create zeros for trace of FI matrix
@@ -162,7 +162,7 @@ for lambda=lambdaspan
                 [max_value,new_index]=max(trA);
                 
                 %if mod(iteration,10)==0 | iteration ==1
-                HeatPlots_11_26_17(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im, coordinates,Fit);
+                HeatPlots_11_26_17(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im,Fit);
                 %end
                 
                 NewLabels(UnlabeledIndices(new_index))=flatClass(UnlabeledIndices(new_index));

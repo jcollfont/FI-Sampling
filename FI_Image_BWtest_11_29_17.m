@@ -23,7 +23,7 @@ seg2class=seg;
 %seg2class=imresize(seg2class,scalefactor,'nearest');
 
 %imshow(im)
-%im=imnoise(im,'gaussian',0,0.005);
+im=imnoise(im,'gaussian',0,0.005);
 imdouble=double(im) + 1; %convert to numbers between 1 and 256 (double)
 
 %% Create Feature Map(s)
@@ -54,29 +54,29 @@ disp('Now loading Del...');
 %tic
 
 %% Calculate Graph Laplacian
-% sigma=10;
-% AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
-% 
-% % tic
-% for i=1:size(flatImage,1)
-%     for j=1:size(flatImage,1)
-%         a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
+sigma=10;
+AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
+
+%tic
+for i=1:size(flatImage,1)
+    for j=1:size(flatImage,1)
+        a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
 %         if a<0.0001
 %             AdjacMat(i,j)=0;
 %         else
-%             AdjacMat(i,j)=a;
+            AdjacMat(i,j)=a;
 %         end
-%     end
-% end
-% % toc
-% 
-% del=diag(sum(AdjacMat,1))-AdjacMat;
-% % toc
-% 
-% save('BWtest_del_11_28_17.mat','del','-v7.3');
-% %toc
+    end
+end
+% toc
 
-load('BWtest_del_11_28_17.mat');
+del=diag(sum(AdjacMat,1))-AdjacMat;
+%toc
+
+save('BWtest_NOISEdel_11_29_17.mat','del','-v7.3');
+%toc
+
+load('BWtest_NOISEdel_11_29_17.mat');
 %toc
 disp('Del Loaded');
 
@@ -109,7 +109,7 @@ for lambda=lambdaspan
             end
             
             BWOutput(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
-            save('BWOutput_11_28_17.mat','BWOutput','-v7.3');
+            save('BWOutput_11_29_17.mat','BWOutput','-v7.3');
 
             flatFeature_map_ones = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
             precision=flatFeature_map_ones'*del*flatFeature_map_ones;
@@ -190,7 +190,7 @@ for lambda=lambdaspan
                 
                 BWOutput(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
                 BWOutput(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
-                save('BWOutput_11_28_17.mat','BWOutput','-v7.3');
+                save('BWOutput_11_29_17.mat','BWOutput','-v7.3');
             end
             BWOutput(q).Lambda=lambda
             BWOutput(q).lambdaEye=lambdaI;
@@ -202,5 +202,5 @@ for lambda=lambdaspan
     q=q+1;
 end
 
-save('BWOutput_11_28_17.mat','BWOutput','-v7.3');
+save('BWOutput_11_29_17.mat','BWOutput','-v7.3');
 
