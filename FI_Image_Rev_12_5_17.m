@@ -9,21 +9,68 @@ lambdaspan=1; %10^-1; %3.7365e+12; %10.^linspace(-6,1,8);
 lambdaIspan=0;
 KernelSize=9;
 
-[seg,PoolWeights]=GenerateBWimage2;
+im=rgb2gray(imread('135069.jpg')); %converts truecolor to intensity
 
-im=(imread('BWtest2.jpg')); %converts truecolor to intensity
+seg = readSeg('135069.seg');
+[rs,cs]=size(seg);
+for i=1:rs %eliminate single pixel segmentations from original image
+    for ii=1:cs
+        if seg(i,ii)==6
+            seg(i,ii)=1;
+        end
+        if seg(i,ii)==5
+            seg(i,ii)=1;
+        end
+    end
+end
 
-%load('BWtestTruth2.mat');
-seg2class=seg;
+%% Use only two classes of this image (birds vs background)
+seg2class=zeros(rs,cs);
+for i=1:rs
+    for ii=1:cs
+        if seg(i,ii)==1
+            seg2class(i,ii)=1; %background is 1
+        end
+        if seg(i,ii)==2
+            seg2class(i,ii)=2; %birds are 2
+        end
+        if seg(i,ii)==3
+            seg2class(i,ii)=1; %tails are 2
+        end
+        if seg(i,ii)==4
+            seg2class(i,ii)=2; %birds are 2
+        end
+    end
+end
+
+%% Square off image (im, seg, seg2class)
+if size(im,1)>size(im,2)
+    ldiff=size(im,1)-size(im,2);
+    im=im(floor(ldiff/2):end-floor(ldiff/2)-1,:);
+    seg=seg(floor(ldiff/2):end-floor(ldiff/2)-1,:);
+    seg2class=seg2class(floor(ldiff/2):end-floor(ldiff/2)-1,:);
+elseif size(im,1)<size(im,2)
+    ldiff=size(im,2)-size(im,1);
+    im=im(:,floor(ldiff/2):end-floor(ldiff/2)-1);
+    seg=seg(:,floor(ldiff/2):end-floor(ldiff/2)-1);
+    seg2class=seg2class(:,floor(ldiff/2):end-floor(ldiff/2)-1);
+else
+    %do Nothing -- dimensions are squared
+end
 
 %% Shrink Image further (assumed square)
+PixRm=100;
+im=im(floor(PixRm/2):end-floor(PixRm/2)-1,floor(PixRm/2):end-floor(PixRm/2)-1);
+seg=seg(floor(PixRm/2):end-floor(PixRm/2)-1,floor(PixRm/2):end-floor(PixRm/2)-1);
+seg2class=seg2class(floor(PixRm/2):end-floor(PixRm/2)-1,floor(PixRm/2):end-floor(PixRm/2)-1);
 
-%scalefactor=1.0;
-%im=imresize(im,scalefactor);
-%seg2class=imresize(seg2class,scalefactor,'nearest');
+scalefactor=1.0;
+im=imresize(im,scalefactor);
+seg=imresize(seg,scalefactor,'nearest');
+seg2class=imresize(seg2class,scalefactor,'nearest');
 
 %imshow(im)
-%im=imnoise(im,'gaussian',0,0.005);
+%%im=imnoise(im,'gaussian',0,0.005);
 imdouble=double(im) + 1; %convert to numbers between 1 and 256 (double)
 
 %% Create Feature Map(s)
@@ -73,11 +120,10 @@ disp('Now loading Del...');
 % del=diag(sum(AdjacMat,1))-AdjacMat;
 % %toc
 % 
-% save('BWtest_NOISEdel_11_29_17.mat','del','-v7.3');
+% save('bird_del_11_24_17.mat','del','-v7.3');
 % %toc
 
-load('BWtest_del_11_29_17.mat');
-%load('BWtest_NOISEdel_11_29_17.mat');
+load('bird_del_11_24_17.mat');
 %toc
 disp('Del Loaded');
 
@@ -109,8 +155,8 @@ for lambda=lambdaspan
                 end
             end
             
-            BWOutput(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
-            save('BWOutput_11_29_17.mat','BWOutput','-v7.3');
+            Output(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
+            save('Output_12_5_17.mat','Output','-v7.3');
 
             flatFeature_map_ones = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
             precision=flatFeature_map_ones'*del*flatFeature_map_ones;
@@ -189,20 +235,20 @@ for lambda=lambdaspan
                 AccuracyVsIterationClass1(iteration)=accuracy1;
                 AccuracyVsIterationClass2(iteration)=accuracy2;
                 
-                BWOutput(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
-                BWOutput(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
-                save('BWOutput_11_29_17.mat','BWOutput','-v7.3');
+                Output(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
+                Output(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
+                save('Output_12_5_17.mat','Output','-v7.3');
             end
-            BWOutput(q).Lambda=lambda;
-            BWOutput(q).lambdaEye=lambdaI;
-            BWOutput(q).PoolIt(PoolIteration).AccuracyTotal=AccuracyVsIterationTotal;
-            BWOutput(q).PoolIt(PoolIteration).Accuracy1=AccuracyVsIterationClass1;
-            BWOutput(q).PoolIt(PoolIteration).Accuracy2=AccuracyVsIterationClass2;
+            Output(q).Lambda=lambda;
+            Output(q).lambdaEye=lambdaI;
+            Output(q).PoolIt(PoolIteration).AccuracyTotal=AccuracyVsIterationTotal;
+            Output(q).PoolIt(PoolIteration).Accuracy1=AccuracyVsIterationClass1;
+            Output(q).PoolIt(PoolIteration).Accuracy2=AccuracyVsIterationClass2;
         end
     end
     q=q+1;
 end
 
-save('BWOutput_11_29_17.mat','BWOutput','-v7.3');
+save('Output_12_5_17.mat','Output','-v7.3');
 
-READ_BWOutput
+READ_Output
