@@ -14,7 +14,7 @@ end
 if nargin < 4
     lambda = 1e-4; %set lambda if not specified
 end
-B=lambda*precision+LAMBDA; %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+B=lambda*precision; %+LAMBDA; %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 data = [data; ones(1,size(data,2))]; %append ones
 [featureNum,dataNum] = size(data); %find size of data
 classNum = max(labels); %number of classes
