@@ -1,11 +1,11 @@
 %% Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
 clear;
-IterationNum=1000;
+IterationNum=1900;
 c_total=2;
 PoolIterations=2; %always add plus 1 for random drawing
-PoolNum=500; %Number of samples in initial labeled pool
-lambdaspan=1; %10^-1; %3.7365e+12; %10.^linspace(-6,1,8);
+PoolNum=100; %Number of samples in initial labeled pool
+lambdaspan=10.^linspace(0,5,6); %10^-1; %3.7365e+12; %10.^linspace(-6,1,8);
 lambdaIspan=0;
 KernelSize=9;
 
@@ -64,7 +64,7 @@ im=im(floor(PixRm/2):end-floor(PixRm/2)-1,floor(PixRm/2):end-floor(PixRm/2)-1);
 seg=seg(floor(PixRm/2):end-floor(PixRm/2)-1,floor(PixRm/2):end-floor(PixRm/2)-1);
 seg2class=seg2class(floor(PixRm/2):end-floor(PixRm/2)-1,floor(PixRm/2):end-floor(PixRm/2)-1);
 
-scalefactor=0.6;
+scalefactor=0.8;
 im=imresize(im,scalefactor);
 seg=imresize(seg,scalefactor,'nearest');
 seg2class=imresize(seg2class,scalefactor,'nearest');
@@ -83,22 +83,6 @@ imdouble=double(im) + 1; %convert to numbers between 1 and 256 (double)
 % seg=seg(floor(ZRm/2):end-floor(ZRm/2)-1,floor(ZRm/2):end-floor(ZRm/2)-1);
 % seg2class=seg2class(floor(ZRm/2):end-floor(ZRm/2)-1,floor(ZRm/2):end-floor(ZRm/2)-1);
 % feature_map=feature_map(floor(ZRm/2):end-floor(ZRm/2)-1,floor(ZRm/2):end-floor(ZRm/2)-1,:);
-
-% coordinates=zeros(size(imdouble,1)*size(imdouble,2),2); %Create list of coordinates
-% c=1:size(imdouble,2);
-% c=c';
-% coordinates(:,2)=repmat(c,size(imdouble,1),1);
-% r=1;c=1;
-% for i=1:size(coordinates,1)
-%     if c<size(imdouble,2)
-%         coordinates(i,1)=r;
-%         c=c+1;
-%     else
-%         coordinates(i,1)=r;
-%         c=1;
-%         r=r+1;
-%     end
-% end
 
 flatImage=reshape(imdouble,(size(im,1)*size(im,2)),1); %make image list (of pixel values)
 flatClass=reshape(seg2class,(size(seg2class,1)*size(seg2class,2)),1);
@@ -129,10 +113,10 @@ disp('Now loading Del...');
 % %toc
 % 
 % %save('bird_delp6_12_5_17.mat','del','-v7.3');
-% save('bird_delNOISEp6_V2_12_5_17.mat','del','-v7.3');
+% save('bird_delNOISEp8_12_7_17.mat','del','-v7.3');
 % %toc
 
-load('bird_delp6_12_5_17.mat');
+load('bird_delNOISEp8_12_7_17.mat');
 %toc
 disp('Del Loaded');
 
@@ -179,7 +163,7 @@ for lambda=lambdaspan
             end
             
             Output(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
-            save('Output_12_5_17.mat','Output','-v7.3');
+            save('Output_12_8_17.mat','Output','-v7.3');
 
             flatFeature_map_ones = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
             precision=flatFeature_map_ones'*del*flatFeature_map_ones;
@@ -236,10 +220,10 @@ for lambda=lambdaspan
                     [max_value,new_index]=max(trA);
                 end
 
-                if mod(iteration,50)==0 | iteration ==1
-                HeatPlots_11_26_17(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im,Fit);
-                pause(0.5);
-                end
+%                 if mod(iteration,50)==0 | iteration ==1
+%                 HeatPlots_11_26_17(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im,Fit);
+%                 pause(0.5);
+%                 end
 
                 end
 
@@ -281,7 +265,7 @@ for lambda=lambdaspan
 
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
-                save('Output_12_5_17.mat','Output','-v7.3');
+                save('Output_12_8_17.mat','Output','-v7.3');
             end
             Output(q).Lambda=lambda;
             Output(q).lambdaEye=lambdaI;
@@ -293,6 +277,4 @@ for lambda=lambdaspan
     q=q+1;
 end
 
-save('Output_12_5_17.mat','Output','-v7.3');
-
-READ_Output
+save('Output_12_8_17.mat','Output','-v7.3');
