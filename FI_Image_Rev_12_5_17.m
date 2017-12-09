@@ -1,9 +1,9 @@
 %% Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
 clear;
-IterationNum=1000;
+IterationNum=1500;
 c_total=2;
-PoolIterations=2; %always add plus 1 for random drawing
+PoolIterations=1; %always add plus 1 for random drawing
 PoolNum=500; %Number of samples in initial labeled pool
 lambdaspan=1; %10^-1; %3.7365e+12; %10.^linspace(-6,1,8);
 lambdaIspan=0;
@@ -70,7 +70,7 @@ seg=imresize(seg,scalefactor,'nearest');
 seg2class=imresize(seg2class,scalefactor,'nearest');
 
 %imshow(im)
-im=imnoise(im,'gaussian',0,0.005);
+%im=imnoise(im,'gaussian',0,0.005);
 imdouble=double(im) + 1; %convert to numbers between 1 and 256 (double)
 
 %% Create Feature Map(s)
@@ -167,19 +167,19 @@ for lambda=lambdaspan
             if PoolIteration == 1
                 sPoolIndex=PoolIndex;
                 sNewLabels=NewLabels;
-                random=1;
+                random=0;
             elseif PoolIteration == 2
                 clear PoolIndex;
                 clear NewLabels;
                 PoolIndex=sPoolIndex;
                 NewLabels=sNewLabels;
-                random=0;
+                random=1;
             else
                 random=0;
             end
             
             Output(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
-            save('Output_12_5_17.mat','Output','-v7.3');
+            save('Output1NN_12_5_17.mat','Output','-v7.3');
 
             flatFeature_map_ones = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
             precision=flatFeature_map_ones'*del*flatFeature_map_ones;
@@ -236,13 +236,6 @@ for lambda=lambdaspan
                     [max_value,new_index]=max(trA);
                 end
 
-                if mod(iteration,50)==0 | iteration ==1
-                HeatPlots_11_26_17(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im,Fit);
-                pause(0.5);
-                end
-
-                end
-
                 %Estimated Unlabeleds
                 Estimates=zeros(size(flatImage,1),1);
                 Estimates(UnlabeledIndices)=EstimatedUnlabeleds;
@@ -255,6 +248,13 @@ for lambda=lambdaspan
 %                 for i=1:length(coordinates)
 %                     Estimate_Matrix(coordinates(i,2),coordinates(i,1))=EstimatesAndLabels(i);
 %                 end
+                
+                if mod(iteration,50)==0 | iteration ==1
+                HeatPlots_11_26_17(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im,Fit);
+                pause(0.5);
+                end
+
+                end
 
                 NewLabels(UnlabeledIndices(new_index))=flatClass(UnlabeledIndices(new_index));
                 class{flatClass(UnlabeledIndices(new_index))}=[class{flatClass(UnlabeledIndices(new_index))};flatFeature_map(UnlabeledIndices(new_index),:)];
@@ -281,7 +281,7 @@ for lambda=lambdaspan
 
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
-                save('Output_12_5_17.mat','Output','-v7.3');
+                save('Output1NN_12_5_17.mat','Output','-v7.3');
             end
             Output(q).Lambda=lambda;
             Output(q).lambdaEye=lambdaI;
@@ -293,6 +293,6 @@ for lambda=lambdaspan
     q=q+1;
 end
 
-save('Output_12_5_17.mat','Output','-v7.3');
+save('Output1NN_12_5_17.mat','Output','-v7.3');
 
 READ_Output
