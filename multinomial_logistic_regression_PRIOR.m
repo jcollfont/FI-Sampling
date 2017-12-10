@@ -14,7 +14,7 @@ end
 if nargin < 4
     lambda = 1e-4; %set lambda if not specified
 end
-B=lambda*precision; %+LAMBDA; %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+B=lambda*precision; %+LAMBDA; %1.12225*10^9
 data = [data; ones(1,size(data,2))]; %append ones
 [featureNum,dataNum] = size(data); %find size of data
 classNum = max(labels); %number of classes
@@ -46,7 +46,7 @@ for iteration = 2:Max_Iterations
     [U,S,V] = svd(H);
 %     [M,I] = max(abs(diff(diag(S))));
     I = find(diag(S)<(max(diag(S)))*10^-6,1,'first');
-    w(:) = w(:)-V(:,1:I-1)*inv(S(1:I-1,1:I-1))*U(:,1:I-1)'*G(:);
+    w(:) = w(:)'-G(:)'*V(:,1:I-1)*inv(S(1:I-1,1:I-1))*U(:,1:I-1)';
     %w(:) = w(:)-H\G(:); %parameter vector updated via 4.92
 end
 logLikelihood = logLikelihood(2:iteration);
