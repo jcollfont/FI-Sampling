@@ -5,7 +5,7 @@ IterationNum=2000;
 c_total=2;
 PoolIterations=4; %always add plus 1 for random drawing
 PoolNum=500; %Number of samples in initial labeled pool
-lambdaspan=0.1; %10^-1; %3.7365e+12; %10.^linspace(-6,1,8);
+lambdaspan=10; %10^-1; %3.7365e+12; %10.^linspace(-6,1,8);
 lambdaIspan=0;
 KernelSize=9;
 
