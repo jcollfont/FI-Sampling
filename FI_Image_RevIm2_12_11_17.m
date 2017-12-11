@@ -81,30 +81,30 @@ disp('Now loading Del...');
 %tic
 
 %% Calculate Graph Laplacian
-% sigma=10;
-% AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
-% 
-% %tic
-% for i=1:size(flatImage,1)
-%     for j=1:size(flatImage,1)
-%         a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
-% %         if a<0.0001
-% %             AdjacMat(i,j)=0;
-% %         else
-%             AdjacMat(i,j)=a;
-% %         end
-%     end
-% end
-% % toc
-% 
-% del=diag(sum(AdjacMat,1))-AdjacMat;
-% %toc
-% 
-% %save('bird_delp6_12_5_17.mat','del','-v7.3');
-% save('circle_delNOISEp6_12_10_17.mat','del','-v7.3');
-% %toc
+sigma=10;
+AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
 
-load('circle_delNOISEp6_12_10_17.mat');
+%tic
+for i=1:size(flatImage,1)
+    for j=1:size(flatImage,1)
+        a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
+%         if a<0.0001
+%             AdjacMat(i,j)=0;
+%         else
+            AdjacMat(i,j)=a;
+%         end
+    end
+end
+% toc
+
+del=diag(sum(AdjacMat,1))-AdjacMat;
+%toc
+
+%save('bird_delp6_12_5_17.mat','del','-v7.3');
+save('circle_delNOISEp6_12_11_17.mat','del','-v7.3');
+%toc
+
+load('circle_delNOISEp6_12_11_17.mat');
 %toc
 disp('Del Loaded');
 
