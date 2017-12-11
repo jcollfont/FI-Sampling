@@ -5,7 +5,7 @@ IterationNum=2000;
 c_total=2;
 PoolIterations=4; %always add plus 1 for random drawing
 PoolNum=500; %Number of samples in initial labeled pool
-lambdaspan=1; %10^-1; %3.7365e+12; %10.^linspace(-6,1,8);
+lambdaspan=10; %10^-1; %3.7365e+12; %10.^linspace(-6,1,8);
 lambdaIspan=0;
 KernelSize=9;
 
@@ -163,7 +163,7 @@ for lambda=lambdaspan
             end
             
             Output(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
-            save('Output_og_12_10_17.mat','Output','-v7.3');
+            save('Output10_12_10_17.mat','Output','-v7.3');
 
             flatFeature_map_ones = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
             precision=flatFeature_map_ones'*del*flatFeature_map_ones;
@@ -183,8 +183,8 @@ for lambda=lambdaspan
             for iteration=1:IterationNum 
                 %% Fit logistic Regression to Current Pool
                 [labels,data]=class_breakdown(class,c_total);
-                %[Fit, llh] = multinomial_logistic_regression_PRIOR(data', labels', precision, lambda, LAMBDA);
-                [Fit, llh] = multinomial_logistic_regression(data', labels',lambda);
+                [Fit, llh] = multinomial_logistic_regression_PRIOR(data', labels', precision, lambda, LAMBDA);
+                %[Fit, llh] = multinomial_logistic_regression(data', labels',lambda);
 
                 UnlabeledIndices=find(NewLabels==0); %collect unlabeled indices
                 if random == 1
@@ -266,7 +266,7 @@ for lambda=lambdaspan
 
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
-                save('Output_og_12_10_17.mat','Output','-v7.3');
+                save('Output10_12_10_17.mat','Output','-v7.3');
             end
             Output(q).Lambda=lambda;
             Output(q).lambdaEye=lambdaI;
@@ -279,4 +279,4 @@ for lambda=lambdaspan
     q=q+1;
 end
 
-save('Output_og_12_10_17_17.mat','Output','-v7.3');
+save('Output10_12_10_17.mat','Output','-v7.3');
