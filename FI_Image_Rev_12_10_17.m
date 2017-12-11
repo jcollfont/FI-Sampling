@@ -93,28 +93,28 @@ disp('Now loading Del...');
 %tic
 
 %% Calculate Graph Laplacian
-sigma=10;
-AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
-
-%tic
-for i=1:size(flatImage,1)
-    for j=1:size(flatImage,1)
-        a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
-%         if a<0.0001
-%             AdjacMat(i,j)=0;
-%         else
-            AdjacMat(i,j)=a;
-%         end
-    end
-end
-% toc
-
-del=diag(sum(AdjacMat,1))-AdjacMat;
-%toc
-
-%save('bird_delp6_12_5_17.mat','del','-v7.3');
-save('bird_delNOISEp6_12_10_17.mat','del','-v7.3');
-%toc
+% sigma=10;
+% AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
+% 
+% %tic
+% for i=1:size(flatImage,1)
+%     for j=1:size(flatImage,1)
+%         a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
+% %         if a<0.0001
+% %             AdjacMat(i,j)=0;
+% %         else
+%             AdjacMat(i,j)=a;
+% %         end
+%     end
+% end
+% % toc
+% 
+% del=diag(sum(AdjacMat,1))-AdjacMat;
+% %toc
+% 
+% %save('bird_delp6_12_5_17.mat','del','-v7.3');
+% save('bird_delNOISEp6_12_10_17.mat','del','-v7.3');
+% %toc
 
 load('bird_delNOISEp6_12_10_17.mat');
 %toc
@@ -128,10 +128,9 @@ for lambda=lambdaspan
     for lambdaI=lambdaIspan
         disp(['For lambdaI = ',num2str(lambdaI),' ...']);
         %% Initial Labeled Pool
-        count=0;
         for PoolIteration=1:PoolIterations
             disp(['For Pool Iteration = ',num2str(PoolIteration),' ...']);
-            
+            count=0;
             a=1;
             while a==1
                 %PoolIndex=randperm(length(flatImage),PoolNum); %randomly samples w/o replacement
@@ -164,7 +163,7 @@ for lambda=lambdaspan
             end
             
             Output(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
-            save('Output_12_10_17.mat','Output','-v7.3');
+            save('Output_og_12_10_17.mat','Output','-v7.3');
 
             flatFeature_map_ones = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
             precision=flatFeature_map_ones'*del*flatFeature_map_ones;
@@ -184,8 +183,8 @@ for lambda=lambdaspan
             for iteration=1:IterationNum 
                 %% Fit logistic Regression to Current Pool
                 [labels,data]=class_breakdown(class,c_total);
-                [Fit, llh] = multinomial_logistic_regression_PRIOR(data', labels', precision, lambda, LAMBDA);
-                %[Fit, llh] = multinomial_logistic_regression(data', labels',lambda);
+                %[Fit, llh] = multinomial_logistic_regression_PRIOR(data', labels', precision, lambda, LAMBDA);
+                [Fit, llh] = multinomial_logistic_regression(data', labels',lambda);
 
                 UnlabeledIndices=find(NewLabels==0); %collect unlabeled indices
                 if random == 1
@@ -267,11 +266,11 @@ for lambda=lambdaspan
 
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
-                save('Output_12_10_17.mat','Output','-v7.3');
+                save('Output_og_12_10_17.mat','Output','-v7.3');
             end
             Output(q).Lambda=lambda;
             Output(q).lambdaEye=lambdaI;
-            Output(q).CollapseCount=count;
+            Output(q).PoolIt(PoolIteration).Count=count;
             Output(q).PoolIt(PoolIteration).AccuracyTotal=AccuracyVsIterationTotal;
             Output(q).PoolIt(PoolIteration).Accuracy1=AccuracyVsIterationClass1;
             Output(q).PoolIt(PoolIteration).Accuracy2=AccuracyVsIterationClass2;
@@ -280,4 +279,4 @@ for lambda=lambdaspan
     q=q+1;
 end
 
-save('Output_12_10_17.mat','Output','-v7.3');
+save('Output_og_12_10_17_17.mat','Output','-v7.3');
