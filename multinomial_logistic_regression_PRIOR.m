@@ -43,11 +43,11 @@ for iteration = 2:Max_Iterations
     H = reshape(Ht,fc,fc);
     B2 =[B B; B B]; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     H(dg) = H(dg)+B2(dg); %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [U,S,V] = svd(H);
+    %[U,S,V] = svd(H);
 %     [M,I] = max(abs(diff(diag(S))));
-    I = find(diag(S)<(max(diag(S)))*10^-6,1,'first');
-    w(:) = w(:)'-G(:)'*V(:,1:I-1)*inv(S(1:I-1,1:I-1))*U(:,1:I-1)';
-    %w(:) = w(:)-H\G(:); %parameter vector updated via 4.92
+    %I = find(diag(S)<(max(diag(S)))*10^-6,1,'first');
+    %w(:) = w(:)'-G(:)'*V(:,1:I-1)*inv(S(1:I-1,1:I-1))*U(:,1:I-1)';
+    w(:) = w(:)-H\G(:); %parameter vector updated via 4.92
 end
 logLikelihood = logLikelihood(2:iteration);
 Fit.w = w; %output parameter vector
