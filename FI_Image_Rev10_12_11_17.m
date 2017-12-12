@@ -3,7 +3,7 @@
 clear;
 IterationNum=2000;
 c_total=2;
-PoolIterations=4; %always add plus 1 for random drawing
+PoolIterations=6; %always add plus 1 for random drawing
 PoolNum=500; %Number of samples in initial labeled pool
 lambdaspan=10; %10^-1; %3.7365e+12; %10.^linspace(-6,1,8);
 lambdaIspan=0;
@@ -93,30 +93,30 @@ disp('Now loading Del...');
 %tic
 
 %% Calculate Graph Laplacian
-% sigma=10;
-% AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
-% 
-% %tic
-% for i=1:size(flatImage,1)
-%     for j=1:size(flatImage,1)
-%         a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
-% %         if a<0.0001
-% %             AdjacMat(i,j)=0;
-% %         else
-%             AdjacMat(i,j)=a;
-% %         end
-%     end
-% end
-% % toc
-% 
-% del=diag(sum(AdjacMat,1))-AdjacMat;
-% %toc
-% 
-% %save('bird_delp6_12_5_17.mat','del','-v7.3');
-% save('bird_delNOISEp6_12_10_17.mat','del','-v7.3');
-% %toc
+sigma=10;
+AdjacMat=zeros(size(flatFeature_map,1),size(flatFeature_map,1));
 
-load('bird_delNOISEp6_12_10_17.mat');
+%tic
+for i=1:size(flatImage,1)
+    for j=1:size(flatImage,1)
+        a=exp((-1/(2*sigma^2))*(norm(flatFeature_map(i,:)-flatFeature_map(j,:)))^2);
+%         if a<0.0001
+%             AdjacMat(i,j)=0;
+%         else
+            AdjacMat(i,j)=a;
+%         end
+    end
+end
+% toc
+
+del=diag(sum(AdjacMat,1))-AdjacMat;
+%toc
+
+%save('bird_delp6_12_5_17.mat','del','-v7.3');
+save('bird_delNOISEp6_12_11_17.mat','del','-v7.3');
+%toc
+
+load('bird_delNOISEp6_12_11_17.mat');
 %toc
 disp('Del Loaded');
 
@@ -148,11 +148,11 @@ for lambda=lambdaspan
                 end
             end
             
-            if PoolIteration == 1
+            if mod(PoolIteration,2) == 1 %odd
                 sPoolIndex=PoolIndex;
                 sNewLabels=NewLabels;
                 random=1;
-            elseif PoolIteration == 2
+            elseif mod(PoolIteration,2) == 0 %even
                 clear PoolIndex;
                 clear NewLabels;
                 PoolIndex=sPoolIndex;
@@ -163,7 +163,7 @@ for lambda=lambdaspan
             end
             
             Output(q).PoolIt(PoolIteration).InitalPool=PoolIndex;
-            save('Output10_12_11_17.mat','Output','-v7.3');
+            save('Output10_12_12_17.mat','Output','-v7.3');
 
             flatFeature_map_ones = [flatFeature_map ones(size(flatFeature_map,1),1)]; %append ones
             precision=flatFeature_map_ones'*del*flatFeature_map_ones;
@@ -266,7 +266,7 @@ for lambda=lambdaspan
 
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).ParameterV=Fit.w;
                 Output(q).PoolIt(PoolIteration).CurrentIt(iteration).Sample=UnlabeledIndices(new_index);
-                save('Output10_12_11_17.mat','Output','-v7.3');
+                save('Output10_12_12_17.mat','Output','-v7.3');
             end
             Output(q).Lambda=lambda;
             Output(q).lambdaEye=lambdaI;
@@ -279,4 +279,4 @@ for lambda=lambdaspan
     q=q+1;
 end
 
-save('Output10_12_11_17.mat','Output','-v7.3');
+save('Output10_12_12_17.mat','Output','-v7.3');
