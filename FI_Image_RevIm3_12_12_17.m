@@ -180,7 +180,7 @@ for lambda=lambdaspan
 
                 else
                     % Calculate the FI matrix
-                [A, EstimatedUnlabeleds]=CalculateFI_11_26_17(UnlabeledIndices, feature_map, flatFeature_map, Fit, c_total);
+                [A, EstimatedUnlabeleds]=CalculateFI(UnlabeledIndices, feature_map, flatFeature_map, Fit, c_total);
 
 
                 if max(max(max(A)))==0
@@ -216,7 +216,7 @@ for lambda=lambdaspan
 %                 end
                 
 %                 if mod(iteration,50)==0 | iteration ==1
-%                 HeatPlots_11_26_17(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im,Fit);
+%                 HeatPlots(Estimate_Matrix, iteration, NewLabels, UnlabeledIndices,trA, im,Fit);
 %                 pause(0.5);
 %                 end
 
