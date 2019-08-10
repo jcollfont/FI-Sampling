@@ -2,9 +2,9 @@ clear;
 %%% Fisher Rough Draft %%%
 %Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
-IterationNum=40;
+IterationNum=20;
 c_total=4;
-PoolNum=50; %Number of samples in initial labeled pool
+PoolNum=20; %Number of samples in initial labeled pool
 
 %% Create Image and Labels
 ClusterImageGenerator3 %Generate Image
@@ -49,44 +49,22 @@ for iteration=1:IterationNum
         end
     end
     
-    %% Fit logistic Regression to Current Pool
-    [labels,data]=class_breakdown(class,c_total);
-%     L=zeros(1,c_total);
-%     for c=1:c_total
-%         L(c)=length(class{c});
-%     end
-%     for c=1:c_total
-%         l{c}=ones(L(c),1)*c;
-%     end
-%     labels=l{1};
-%     data=class{1};
-%     for c=2:c_total
-%         labels=vertcat(labels,l{c});
-%         data=vertcat(data,class{c});
-%     end
-    
-%     sp=categorical(labels);
-%     B=mnrfit(data,sp);
-
-    [Fit, llh, G] = multinomial_logistic_regression(data', labels');
     %% Calculate the FI matrix
     UnlabeledIndices=find(NewLabels==0); %collect unlabeled indices
     UnlabeledLength=length(UnlabeledIndices);
     A=zeros(2,2,UnlabeledLength); %Create zeros for FI matrix
-    x=zeros(1,UnlabeledLength);
+    Prior=1/c_total; %Assume priors set equal for all classes for now (true for first test image)
     for i=1:UnlabeledLength %walk through unlabeled points
         x=image(UnlabeledIndices(i)); %at unlabeled point x
-        [y, p] = multinomial_logistic_prediction(Fit, x);
         for c=1:c_total
-            P=p(c);
-            %What if you evaluate the logistic regression for each new
-            %point???
-            class_temp=class;
-            class{c}(end+1)=x;
-            [labels_temp,data_temp]=class_breakdown(class_temp,c_total);
-            [Fit_temp, llh_temp, G_temp] = multinomial_logistic_regression(data_temp', labels_temp');
-            g=G_temp(:,c);
-            dLop=g*g'; %outer product
+            G(c)=normpdf(x,muhat{c},sigmahat{c});
+        end
+        for c=1:c_total
+            P=Prior*G(c)/sum(G);
+            dLmu=(x-muhat{c})/(sigmahat{c}^2); %derivative of log likelihood mean
+            dLsigma=((x-muhat{c})^2)/(2*(sigmahat{c}^2)^2); %derivative of log likelihood sigma
+            dL=vertcat(dLmu,dLsigma); %creat derivative of log likelihood matrix
+            dLop=dL*dL'; %outer product
             S(:,:,c)=P*dLop;
         end
         A(:,:,i)=sum(S,3); %FI at x is outer product times posterior estimate summed over classes
@@ -125,11 +103,11 @@ for iteration=1:IterationNum
         end
     end
     
-%     yyaxis left;
-%     plot(image(UnlabeledIndices(:)),trA,'bx');
-%     
-%     hold off;
-    pause(0.1);
+    yyaxis left;
+    plot(image(UnlabeledIndices(:)),trA,'bx');
+    
+    hold off;
+    pause(0.5);
     
 end
 

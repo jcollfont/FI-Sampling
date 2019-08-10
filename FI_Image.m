@@ -2,21 +2,33 @@ clear;
 %%% Fisher Rough Draft %%%
 %Inputs: Image, Actual Labels, Labeled Pool Size, iterations (or
 %confidence), # of classes
-IterationNum=40;
-c_total=4;
-PoolNum=50; %Number of samples in initial labeled pool
+IterationNum=300;
+c_total=2;
+PoolNum=20; %Number of samples in initial labeled pool
+
+%TRY WITH REAL LABELED IMAGE (WILL HAVE TO FIGURE OUT INDEXING ISSUES)
+%2. query user to label random pixels of pool size
+%3. After all pool is labeled run through algorithm
+%4. Query user to label pixel/group with each iteration
+%5. Output current image guess with each iteration
 
 %% Create Image and Labels
-ClusterImageGenerator3 %Generate Image
-image=image1; %load image
-Knownlabels=imagelabels; %actually class labels
+% ClusterImageGenerator2 %Generate Image
+% image=image1; %load image
+% Knownlabels=imagelabels; %actually class labels
 
-%Ignore Spatial Elements of Image (Convert to 1d instead of 2)
-listsize=length(image1)^2; %length of image
-NewLabels=zeros(listsize,1); %empty estimated labels
+% %Ignore Spatial Elements of Image (Convert to 1d instead of 2)
+% listsize=length(image1)^2; %length of image
+% NewLabels=zeros(listsize,1); %empty estimated labels
+% 
+% image=reshape(image,listsize,1); %make image list (of pixel values)
+% Knownlabels=reshape(Knownlabels,listsize,1); %make lables list
 
-image=reshape(image,listsize,1); %make image list (of pixel values)
-Knownlabels=reshape(Knownlabels,listsize,1); %make lables list
+im=rgb2gray(imread('flower_test.jpg'));
+image=double(im) + 1;
+
+%% Create Feature Map
+[features] = Image2Features(image);
 
 %% Initial Labeled Pool
 [PoolClass,PoolIndex]=datasample(Knownlabels,PoolNum); %randomly samples w/o replacement
@@ -27,21 +39,20 @@ for i=1:PoolNum %Add labels to current list
 end
 
 for c=1:c_total %create class lists
-    class{c} = image(PoolIndex(find(PoolClass==c)));
+    class{c} = features(PoolIndex(find(PoolClass==c)),:);
 end
 
+f=1;
 %% Iterative Loop
 %figID = figure;
 for iteration=1:IterationNum
     %% MLE Parameter Estimates
-    % [muhat1,sigmahat1] = normfit(class1data);
-    % [muhat2,sigmahat2] = normfit(class2data); %uses sqrt of ubiased estimator for sigma
     for c=1:c_total
-        n=length(class{c});
-        muhat{c}=(1/n)*sum(class{c});
+        n=size(class{c},1);
+        muhat{c}=(1/n)*sum(class{c}(:,5)); %class{c}(:,5)
         sigmahat{c}=0;
         for i=1:n
-            sigmahat{c}=sigmahat{c}+(class{c}(i)-muhat{c})^2;
+            sigmahat{c}=sigmahat{c}+((class{c}(i,5))-muhat{c})^2; %5
         end
         sigmahat{c}=sqrt((1/(n-1))*sigmahat{c});
         if isnan(sigmahat{c})==1
@@ -51,41 +62,18 @@ for iteration=1:IterationNum
     
     %% Fit logistic Regression to Current Pool
     [labels,data]=class_breakdown(class,c_total);
-%     L=zeros(1,c_total);
-%     for c=1:c_total
-%         L(c)=length(class{c});
-%     end
-%     for c=1:c_total
-%         l{c}=ones(L(c),1)*c;
-%     end
-%     labels=l{1};
-%     data=class{1};
-%     for c=2:c_total
-%         labels=vertcat(labels,l{c});
-%         data=vertcat(data,class{c});
-%     end
-    
-%     sp=categorical(labels);
-%     B=mnrfit(data,sp);
-
-    [Fit, llh, G] = multinomial_logistic_regression(data', labels');
+    [Fit, llh] = multinomial_logistic_regression(data', labels);
     %% Calculate the FI matrix
     UnlabeledIndices=find(NewLabels==0); %collect unlabeled indices
     UnlabeledLength=length(UnlabeledIndices);
-    A=zeros(2,2,UnlabeledLength); %Create zeros for FI matrix
+    A=zeros(size(features,2)+1,size(features,2)+1,UnlabeledLength); %Create zeros for FI matrix
     x=zeros(1,UnlabeledLength);
     for i=1:UnlabeledLength %walk through unlabeled points
-        x=image(UnlabeledIndices(i)); %at unlabeled point x
-        [y, p] = multinomial_logistic_prediction(Fit, x);
+        x=features(UnlabeledIndices(i),:); %at unlabeled point x
+        [y, p] = multinomial_logistic_prediction(Fit, x');
         for c=1:c_total
             P=p(c);
-            %What if you evaluate the logistic regression for each new
-            %point???
-            class_temp=class;
-            class{c}(end+1)=x;
-            [labels_temp,data_temp]=class_breakdown(class_temp,c_total);
-            [Fit_temp, llh_temp, G_temp] = multinomial_logistic_regression(data_temp', labels_temp');
-            g=G_temp(:,c);
+            g=(1-P)*x;
             dLop=g*g'; %outer product
             S(:,:,c)=P*dLop;
         end
@@ -104,12 +92,12 @@ for iteration=1:IterationNum
 	  for c=1:c_total
         norm{c}=normpdf(xax,mu{c},sigma{c});
         normest{c}=normpdf(xax,muhat{c},sigmahat{c});
-    end
+      end
 	
-    figure() %figID
+    figure(f) %figID
     hold on
     for c=1:c_total
-        plot(class{c}',ones(length(class{c}),1)*(max(norm{c})/2),'bx')
+        plot(class{c}(:,1)',ones(size(class{c},5),1)*(max(norm{c})/2),'bx') %5
         plot(xax,normest{c},'--b') %Estimated Distribution
         plot(xax,norm{c},'-k') %Actual Distrubution
     end
@@ -120,16 +108,19 @@ for iteration=1:IterationNum
     NewLabels(new_index)=Knownlabels(UnlabeledIndices(new_index));
     for c=1:c_total
         if Knownlabels(UnlabeledIndices(new_index))==c
-            class{c}(end+1)=image(UnlabeledIndices(new_index));
-            plot(image(UnlabeledIndices(new_index)),(max(norm{c})/2),'or','MarkerSize',5,'LineWidth',2)
+            class{c}=[class{c};features(UnlabeledIndices(new_index),:)];
+            plot(features(UnlabeledIndices(new_index),5),(max(norm{c})/2),'or','MarkerSize',5,'LineWidth',2) %(new_index),5)
+            break;
         end
     end
     
-%     yyaxis left;
-%     plot(image(UnlabeledIndices(:)),trA,'bx');
-%     
-%     hold off;
+    yyaxis right;
+    plot(image(UnlabeledIndices(:)),trA,'bx');
+    hold off;
+    if iteration~=1 & iteration~=IterationNum
+        close(figure(f))
+    end
     pause(0.1);
-    
+    f=f+1;
 end
 
